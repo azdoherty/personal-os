@@ -1,0 +1,22 @@
+# Per-machine Claude Code local settings (paths + approved-command history)
+.claude/settings.local.json
+
+# CPSC recall corpus — large (2MB+, 1k+ public-but-spammy emails), rebuilt
+# on demand via plugins/research/skills/brand-check/scripts/refresh_recall_corpus.py
+plugins/research/references/recall_corpus.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# OS noise
+.DS_Store
+Thumbs.db
+
+# Editor noise
+*.swp
+*.swo
+.idea/
+.vscode/

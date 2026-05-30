@@ -1,0 +1,16 @@
+{
+  "name": "personal-os",
+  "description": "Personal collection of Claude Code plugins for everyday automation, research, and quality-of-life tooling.",
+  "owner": {
+    "name": "azdoh",
+    "email": "your-email@example.com"
+  },
+  "plugins": [
+    {
+      "name": "research",
+      "description": "Literature review for purchases and questions: searches Reddit (with engagement data), HN, StackExchange, and the web; verifies brand legitimacy; scores source trust; produces a cited summary.",
+      "source": "./plugins/research",
+      "category": "productivity"
+    }
+  ]
+}
