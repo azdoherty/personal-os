@@ -81,6 +81,18 @@ def test_max_offer_price_raises_when_cash_on_cash_improves_without_bound():
         max_offer_price(p, ASSUMPTIONS, effective_rate=0.075, target_coc=-0.5)
 
 
+def test_build_scenarios_degrades_gracefully_on_unbounded_return():
+    # Same negative-target/unprofitable-property combination that makes
+    # max_offer_price raise UnboundedReturnError directly (see the other test) --
+    # build_scenarios must catch it, not propagate it, and record why.
+    p = Property(address="W", list_price=500000.0, gross_monthly_rent=100.0)
+    assumptions = dict(ASSUMPTIONS, thresholds={"target_coc_pct": -0.5})
+    scenarios, max_price = build_scenarios(p, assumptions, effective_rate=0.075)
+    assert max_price is None
+    assert any("unbound" in note.lower() for note in p.notes)
+    assert len(scenarios) == len(assumptions["scenarios"]["price_offsets"])
+
+
 def test_build_scenarios_labels_and_flags():
     p = Property(address="X", list_price=200000.0, gross_monthly_rent=3500.0)
     scenarios, max_price = build_scenarios(p, ASSUMPTIONS, effective_rate=0.075)

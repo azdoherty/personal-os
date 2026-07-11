@@ -176,5 +176,12 @@ def build_scenarios(prop: Property, assumptions: dict, effective_rate: float,
             annual_cashflow=r["annual_cashflow"], cash_on_cash=r["cash_on_cash"],
             meets_target=r["cash_on_cash"] >= target - 1e-9,
         ))
-    max_price = max_offer_price(prop, assumptions, effective_rate, target, strict_cashflow)
+    try:
+        max_price = max_offer_price(prop, assumptions, effective_rate, target, strict_cashflow)
+    except UnboundedReturnError:
+        max_price = None
+        prop.notes.append(
+            "no finite max offer price: cash-on-cash return is unbounded "
+            "(keeps improving without limit) at this target"
+        )
     return scenarios, max_price
