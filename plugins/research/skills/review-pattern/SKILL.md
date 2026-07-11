@@ -63,7 +63,7 @@ cat reviews.json | python3 ${CLAUDE_PLUGIN_ROOT}/skills/review-pattern/scripts/a
 
 ```json
 {
-  "brand": "Allolo",
+  "brand": "Vosmith",
   "review_count": 50,
   "authenticity_score": 23,
   "verdict": "suspicious",

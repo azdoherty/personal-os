@@ -64,7 +64,7 @@ Defaults: all four sources, N=10 per source, no year filter, PubMed fetches abst
 
 | Goal | Command |
 |---|---|
-| Recent medical evidence | `search.py "PRP tendinopathy" --sources pubmed --year-from 2022` |
+| Recent medical evidence | `search.py "vitamin D deficiency treatment" --sources pubmed --year-from 2022` |
 | Real estate finance papers | `search.py "cap rate prediction" --sources openalex,semantic_scholar` |
 | ML preprints + published | `search.py "mixture of experts" --sources arxiv,semantic_scholar` |
 | Fast scan, no abstracts | `search.py "topic" --no-abstracts -n 5` |

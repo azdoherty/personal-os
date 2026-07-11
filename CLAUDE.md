@@ -25,8 +25,8 @@ python3 plugins/research/skills/brand-check/scripts/refresh_recall_corpus.py --y
 
 # Run a skill's script directly (useful when iterating)
 python3 plugins/research/skills/reddit-search/scripts/search.py "ergonomic chair" -s buyitforlife
-python3 plugins/research/skills/academic-search/scripts/search.py "PRP tendinopathy" --sources pubmed,openalex
-python3 plugins/research/skills/brand-check/scripts/brand_check.py "Kineon" --reviewer-hits 3 --integrity-hits 0 --keywords "therapy,light"
+python3 plugins/research/skills/academic-search/scripts/search.py "vitamin D deficiency treatment" --sources pubmed,openalex
+python3 plugins/research/skills/brand-check/scripts/brand_check.py "Auravex" --reviewer-hits 3 --integrity-hits 0 --keywords "therapy,light"
 cat sources.json | python3 plugins/research/skills/source-trust/scripts/score.py
 ```
 

@@ -600,7 +600,7 @@ DEFAULT_REDDIT_SCRIPT = os.path.join(
 
 def main() -> int:
     p = argparse.ArgumentParser(description="Score a brand's legitimacy 0-100.")
-    p.add_argument("brand", help="Brand name to check (e.g. 'Kineon').")
+    p.add_argument("brand", help="Brand name to check (e.g. 'Auravex').")
     p.add_argument(
         "--reviewer-hits",
         type=int,
@@ -621,7 +621,7 @@ def main() -> int:
     p.add_argument(
         "--known-domain",
         default=None,
-        help="Skip URL guessing and use this domain directly (e.g. kineon.io).",
+        help="Skip URL guessing and use this domain directly (e.g. auravex.io).",
     )
     p.add_argument(
         "--reddit-script",

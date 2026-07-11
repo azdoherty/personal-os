@@ -22,9 +22,9 @@ Usage:
 
   --brand-legitimacy JSON example:
     {
-      "kineon.io": 84,
-      "prungo.com": 71,
-      "amazon.com/dp/B0DK35X239": 25
+      "auravex.io": 84,
+      "halcyra.com": 71,
+      "amazon.com/dp/B0XYZ12345": 25
     }
   Keys are bare domains or "domain/path-prefix"; values are 0-100 scores.
   Matching items get prior * (score/100) before recency. Strong way to
@@ -200,8 +200,8 @@ def corroboration_bonus(item: dict, corr: dict[str, int]) -> tuple[int, str]:
 def brand_legitimacy_factor(url: str, brand_map: dict) -> tuple[float, str]:
     """Look up brand legitimacy by URL match.
 
-    `brand_map` keys are either bare domains ("kineon.io") or
-    domain+path-prefix ("amazon.com/allolo"). Values are 0-100 legitimacy
+    `brand_map` keys are either bare domains ("auravex.io") or
+    domain+path-prefix ("amazon.com/vosmith"). Values are 0-100 legitimacy
     scores. The returned factor multiplies the domain prior.
     """
     if not brand_map:

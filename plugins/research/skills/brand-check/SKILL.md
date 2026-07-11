@@ -77,7 +77,7 @@ Flags:
 
 ```json
 {
-  "brand": "Kineon",
+  "brand": "Auravex",
   "legitimacy": 84,
   "verdict": "legitimate",
   "signals": [
@@ -86,7 +86,7 @@ Flags:
      "details": {"relevant_posts": 11, "total_engagement": 247, "examples": [...]}},
     {"name": "independent_reviewer", "value": 3, "weight": 0.35, "score": 100,
      "note": "3 independent reviewer hits"},
-    {"name": "website_footprint", "value": "https://kineon.io", "weight": 0.25, "score": 65,
+    {"name": "website_footprint", "value": "https://auravex.io", "weight": 0.25, "score": 65,
      "note": "partial footprint (2/4 markers)"}
   ],
   "checked_at": 1764500000
@@ -107,7 +107,7 @@ Flags:
 
 ```bash
 # 1. Run brand-check on each candidate brand, save as a domain → legitimacy map
-echo '{"kineon.io": 84, "prungo.com": 71, "amazon.com/allolo": 22}' > /tmp/brands.json
+echo '{"auravex.io": 84, "halcyra.com": 71, "amazon.com/vosmith": 22}' > /tmp/brands.json
 
 # 2. Pass to source-trust
 cat all_sources.json | source-trust/scripts/score.py --brand-legitimacy /tmp/brands.json
@@ -126,7 +126,7 @@ When a source's URL matches a key in the legitimacy map, its domain prior is mul
 
 | Brand | Verdict | Why |
 |---|---|---|
-| Kineon | `legitimate` (88) | Organic r/golf + r/redlighttherapy threads; Wareable + Garage Gym Reviews coverage; Shopify site at kineon.io; no documented controversies |
-| Prungo | `legitimate` (84) | Tennisnerd + Trail and Kale + Gadgets & Wearables reviews; Shopify site at prungo.com; no documented controversies |
+| Auravex | `legitimate` (88) | Organic r/golf + r/redlighttherapy threads; Wareable + Garage Gym Reviews coverage; Shopify site at auravex.io; no documented controversies |
+| Halcyra | `legitimate` (84) | Tennisnerd + Trail and Kale + Gadgets & Wearables reviews; Shopify site at halcyra.com; no documented controversies |
 | Lifepro | `suspicious` (33) | Has reviewer coverage (Consumer Reports, Wareable, GGR) BUT 4 documented integrity issues: CPSC sauna-blanket recall + 32 burn injuries, active product-liability lawsuits, false PEMF advertising, fabricated medical-expert endorsement. The integrity signal drags an otherwise covered brand to suspicious. |
-| Allolo | `suspicious` (23) | Zero organic Reddit RLT discussion (after keyword filter); no independent reviewer coverage; allolo.com is HugeDomains-parked |
+| Vosmith | `suspicious` (23) | Zero organic Reddit RLT discussion (after keyword filter); no independent reviewer coverage; vosmith.com is HugeDomains-parked |

@@ -92,7 +92,7 @@ If the intent is `purchase`, before scoring you should verify every distinct bra
 # 1. Extract distinct brand candidates. For purchase questions, you typically
 #    already know the candidates (the user named them, or your initial pass
 #    surfaced 3-5 products). Make a list:
-BRANDS=("Kineon" "Prungo" "Allolo")
+BRANDS=("Auravex" "Halcyra" "Vosmith")
 
 # 2. For each brand, gather independent reviewer hits via WebSearch (see
 #    brand-check SKILL.md for the category-specific allowed_domains lists),
@@ -106,7 +106,7 @@ for B in "${BRANDS[@]}"; do
 done
 ```
 
-The `brand_legitimacy.json` map should use bare domains (`kineon.io`, `prungo.com`) for brand-owned sites and `domain/path-prefix` strings (`amazon.com/dp/B0XYZ` lower-cased) for marketplace listings.
+The `brand_legitimacy.json` map should use bare domains (`auravex.io`, `halcyra.com`) for brand-owned sites and `domain/path-prefix` strings (`amazon.com/dp/B0XYZ` lower-cased) for marketplace listings.
 
 ### Step 4: Score
 
