@@ -33,8 +33,17 @@ Use a temp working directory for intermediate JSON.
    cat "$TMP/props.json" | python3 ${CLAUDE_PLUGIN_ROOT}/skills/screen-deals/scripts/screen.py > "$TMP/screened.json"
    ```
 3. **HUMAN GATE.** Present the ranked shortlist from `screened.json` (address, price,
-   heuristic rent, asking cash-on-cash, max offer). Ask the user which to keep. Write the
-   kept subset to `$TMP/pruned.json`. Do not proceed until they answer.
+   heuristic rent, asking cash-on-cash, max offer). Ask the user which to keep.
+
+   `screened.json` holds `DealResult` objects — each one wraps a `property` field
+   alongside `scenarios`/`max_offer_price`/`notes`. `enrich-rents` and `report` expect
+   flat `Property` JSON, so **extract just the `property` field from each kept
+   `DealResult`** (not the whole `DealResult`) when writing `$TMP/pruned.json`. Passing
+   the raw `DealResult` objects through would not error — `Property.from_dict` silently
+   tolerates unknown/missing keys — it would just silently produce blank/zeroed
+   properties throughout the rest of the pipeline.
+
+   Do not proceed until the user answers which properties to keep.
 4. **Enrich** only the pruned set (metered — one RentCast call each):
    ```bash
    cat "$TMP/pruned.json" | python3 ${CLAUDE_PLUGIN_ROOT}/skills/enrich-rents/scripts/enrich.py > "$TMP/enriched.json"
