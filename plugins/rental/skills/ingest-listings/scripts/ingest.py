@@ -24,7 +24,7 @@ def main() -> int:
     except SchemaError as e:
         print(f"error: {e}", file=sys.stderr)
         return 2
-    print(json.dumps([p.to_dict() for p in props], ensure_ascii=False))
+    print(json.dumps([p.to_dict() for p in props]))
     print(f"ingested {stats['kept']}/{stats['total']} rows as 2-4 unit "
           f"({stats['dropped_type']} dropped by property type)", file=sys.stderr)
     return 0

@@ -27,7 +27,7 @@ def main() -> int:
     props = [Property.from_dict(d) for d in json.load(sys.stdin)]
     rate, note = effective_rate(cfg)
     results = screen(props, cfg, rate)
-    print(json.dumps([r.to_dict() for r in results], ensure_ascii=False))
+    print(json.dumps([r.to_dict() for r in results]))
     print(f"screened {len(props)} -> {len(results)} passed ({note})", file=sys.stderr)
     return 0
 

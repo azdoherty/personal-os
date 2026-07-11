@@ -71,7 +71,7 @@ def main() -> int:
             )
             enriched.append(prop)
     _save_cache(cache)
-    print(json.dumps([p.to_dict() for p in enriched], ensure_ascii=False))
+    print(json.dumps([p.to_dict() for p in enriched]))
     print(f"enriched with {spent} RentCast call(s); cache at {CACHE_PATH}", file=sys.stderr)
     return exit_code
 
