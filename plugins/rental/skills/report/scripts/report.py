@@ -37,7 +37,10 @@ def main() -> int:
         print(f"error: invalid config: {e}", file=sys.stderr)
         return 3
 
-    props = [Property.from_dict(d) for d in json.load(sys.stdin)]
+    raw = json.load(sys.stdin)
+    raw = [d["property"] if isinstance(d, dict) and "property" in d and "scenarios" in d else d
+           for d in raw]
+    props = [Property.from_dict(d) for d in raw]
     rate, note = effective_rate(cfg)
     results = []
     for p in props:

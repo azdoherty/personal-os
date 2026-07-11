@@ -39,7 +39,10 @@ def main() -> int:
         print(f"error: invalid config: {e}", file=sys.stderr)
         return 3
     api_key = cfg["rentcast_api_key"]
-    props = [Property.from_dict(d) for d in json.load(sys.stdin)]
+    raw = json.load(sys.stdin)
+    raw = [d["property"] if isinstance(d, dict) and "property" in d and "scenarios" in d else d
+           for d in raw]
+    props = [Property.from_dict(d) for d in raw]
     cache = _load_cache()
     enriched, spent = [], 0
     exit_code = 0
