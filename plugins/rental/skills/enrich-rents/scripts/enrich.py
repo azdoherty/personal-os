@@ -63,6 +63,9 @@ def main() -> int:
     seen = {id(p) for p in enriched}
     for prop in props:
         if id(prop) not in seen:
+            prop.notes.append(
+                "not enriched: RentCast quota reached before this property was attempted"
+            )
             enriched.append(prop)
     _save_cache(cache)
     print(json.dumps([p.to_dict() for p in enriched], ensure_ascii=False))
