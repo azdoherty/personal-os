@@ -448,9 +448,10 @@ def test_max_offer_price_roundtrips_to_target():
 
 
 def test_max_offer_price_none_when_unachievable():
-    # Rent too low to ever hit 8% even near $0 is impossible; use a property that
-    # cannot reach target within the search's lower bound.
-    p = Property(address="Y", list_price=500000.0, gross_monthly_rent=1000.0)
+    # Rent so low it doesn't even cover fixed insurance+utilities costs near the
+    # search's $10k lower bound, so cash-on-cash is negative there and only gets
+    # worse (taxes rise) as price increases -- target is unreachable everywhere.
+    p = Property(address="Y", list_price=500000.0, gross_monthly_rent=100.0)
     price = max_offer_price(p, ASSUMPTIONS, effective_rate=0.075, target_coc=0.08)
     assert price is None
 
@@ -1357,6 +1358,8 @@ import json
 import urllib.parse
 import urllib.request
 
+from lib.models import Property
+
 BASE_URL = "https://api.rentcast.io/v1"
 
 
@@ -1368,7 +1371,7 @@ class QuotaError(RentCastError):
     pass
 
 
-def build_rent_url(prop: Property) -> str:  # type: ignore[name-defined]
+def build_rent_url(prop: Property) -> str:
     parts = [prop.address, prop.city, prop.state, prop.zip]
     address = ", ".join(p for p in parts if p)
     params = {"address": address, "propertyType": "Multi-Family"}
@@ -1413,10 +1416,8 @@ def _http_fetch(url: str, api_key: str) -> dict:
         raise RentCastError(f"RentCast HTTP {e.code}: {e}") from e
 
 
-def enrich_property(prop: Property, api_key: str, cache: dict,  # type: ignore[name-defined]
+def enrich_property(prop: Property, api_key: str, cache: dict,
                     fetcher=_http_fetch) -> Property:
-    from lib.models import Property as _P  # local import avoids cycle at module load
-    assert isinstance(prop, _P)
     key = prop.address.strip().lower()
     if key in cache:
         data = cache[key]
@@ -1432,12 +1433,6 @@ def enrich_property(prop: Property, api_key: str, cache: dict,  # type: ignore[n
         prop.notes.append("RentCast returned no rental comps — low confidence")
     return prop
 ```
-
-Add at the top of the file (after the docstring) the model import so the annotations resolve:
-```python
-from lib.models import Property
-```
-(Place it with the other imports; the `# type: ignore` comments above then become unnecessary — remove them.)
 
 - [ ] **Step 4: Run test to verify it passes**
 
