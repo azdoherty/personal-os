@@ -182,6 +182,13 @@ cash flow, because the buy-and-hold investor genuinely sets that money aside. A
 directly (CoC is monotonic in price — no search needed). That row is the "bid at this
 number" figure; any scenario meeting target is flagged.
 
+*(Refined during implementation: cash-on-cash is actually a Möbius (linear-fractional)
+function of price, and the direction of monotonicity depends on the property's own
+economics rather than being fixed. The shipped `max_offer_price` in `lib/underwrite.py`
+detects the regime explicitly and distinguishes "unreachable" (returns `None`) from
+"reachable but unbounded" (raises `UnboundedReturnError`), rather than assuming the single
+fixed direction implied above.)*
+
 **Deliberate omissions (YAGNI):** no PMI (2-4 unit investment loans require >=20-25% down,
 so it never applies); no rent/appreciation growth projection (cash-on-cash is a year-1
 metric). Both are easy to add later as a multi-year pro forma.
