@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repository is
 
-`personal-os` is a Claude Code **plugin marketplace** (declared in `.claude-plugin/marketplace.json`) that currently hosts one plugin: `research` at `plugins/research/`. Add new plugins by dropping them under `plugins/` and appending an entry to the marketplace manifest.
+`personal-os` is a Claude Code **plugin marketplace** (declared in `.claude-plugin/marketplace.json`) that currently hosts two plugins: `research` at `plugins/research/` and `rental` at `plugins/rental/`. Add new plugins by dropping them under `plugins/` and appending an entry to the marketplace manifest.
 
 The `research` plugin (v0.5.0, 9 skills) does literature review for purchases, scientific/medical questions, and other "I need to read 50 threads/papers" research tasks. It fans out across Reddit, HN/StackExchange, the open web, and peer-reviewed literature (PubMed, Semantic Scholar, OpenAlex, arXiv), then trust-scores and summarizes.
 
@@ -16,6 +16,7 @@ The `rental` plugin (v0.1.0, 6 skills) analyzes local 2–4 unit multifamily lis
 # Validate manifests after any change
 claude plugin validate .                           # marketplace
 claude plugin validate plugins/research            # plugin
+claude plugin validate plugins/rental              # plugin
 
 # After bumping plugin version
 claude plugin update research@personal-os          # restart Claude Code to apply

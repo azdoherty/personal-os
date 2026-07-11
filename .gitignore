@@ -25,3 +25,5 @@ Thumbs.db
 # rental plugin — never commit local config or cached API responses
 config.local.json
 *.cache.json
+rental-report.md
+rental-report.csv
