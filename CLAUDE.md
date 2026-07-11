@@ -8,6 +8,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 The `research` plugin (v0.5.0, 9 skills) does literature review for purchases, scientific/medical questions, and other "I need to read 50 threads/papers" research tasks. It fans out across Reddit, HN/StackExchange, the open web, and peer-reviewed literature (PubMed, Semantic Scholar, OpenAlex, arXiv), then trust-scores and summarizes.
 
+The `rental` plugin (v0.1.0, 6 skills) analyzes local 2–4 unit multifamily listings for long-term rental investment: it ingests a Redfin CSV export, screens with a zero-API rent heuristic, pauses for human pruning, enriches the shortlist via RentCast, and reports cash-on-cash returns across price scenarios. Shared logic lives in `plugins/rental/lib/` (stdlib-only, unit-tested); skills are thin CLI wrappers. Config (with the RentCast key) lives in the OS config dir, never the repo.
+
 ## Common commands
 
 ```bash
@@ -28,6 +30,12 @@ python3 plugins/research/skills/reddit-search/scripts/search.py "ergonomic chair
 python3 plugins/research/skills/academic-search/scripts/search.py "vitamin D deficiency treatment" --sources pubmed,openalex
 python3 plugins/research/skills/brand-check/scripts/brand_check.py "Auravex" --reviewer-hits 3 --integrity-hits 0 --keywords "therapy,light"
 cat sources.json | python3 plugins/research/skills/source-trust/scripts/score.py
+
+# Rental plugin — run the test suite
+cd plugins/rental && python -m pytest -v
+
+# Rental pipeline (after /setup): ingest -> screen -> [prune] -> enrich -> report
+python plugins/rental/skills/ingest-listings/scripts/ingest.py redfin.csv > props.json
 ```
 
 There are no automated tests yet — verification happens by running the scripts directly against live APIs.
