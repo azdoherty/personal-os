@@ -1,0 +1,30 @@
+{
+  "_comment": "Default underwriting assumptions copied into a user's config by the setup skill. Percentages are fractions of GROSS monthly rent unless noted. Edit freely.",
+  "financing": {
+    "down_payment_pct": 0.25,
+    "loan_term_years": 30,
+    "closing_cost_pct": 0.03,
+    "rate_spread_pct": 0.0075,
+    "rate_pin_pct": null
+  },
+  "expenses": {
+    "vacancy_pct": 0.05,
+    "maintenance_pct": 0.08,
+    "capex_pct": 0.05,
+    "management_pct": 0.08,
+    "insurance_annual": 1800,
+    "landlord_paid_utilities_monthly": 100,
+    "property_tax_pct_fallback": 0.02
+  },
+  "thresholds": {
+    "target_coc_pct": 0.08,
+    "min_monthly_cashflow": 100,
+    "use_one_percent_rule": false
+  },
+  "screening": {
+    "heuristic_rent_mode": "per_sqft",
+    "rent_per_sqft": 1.10,
+    "rent_per_bedroom": { "1": 850, "2": 1150, "3": 1450 }
+  },
+  "scenarios": { "price_offsets": [0.0, -0.05, -0.10] }
+}
