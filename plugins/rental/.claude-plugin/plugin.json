@@ -1,0 +1,6 @@
+{
+  "name": "rental",
+  "version": "0.1.0",
+  "description": "Analyze local 2-4 unit multifamily listings for long-term rental investment: ingest a Redfin CSV export, screen with a zero-API heuristic, enrich the shortlist with RentCast rent estimates and comps, and report cash-on-cash returns across price scenarios.",
+  "author": { "name": "azdoh", "email": "your-email@example.com" }
+}

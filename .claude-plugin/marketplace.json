@@ -11,6 +11,12 @@
       "description": "Literature review for purchases and questions: searches Reddit (with engagement data), HN, StackExchange, and the web; verifies brand legitimacy; scores source trust; produces a cited summary.",
       "source": "./plugins/research",
       "category": "productivity"
+    },
+    {
+      "name": "rental",
+      "description": "Analyze local 2-4 unit multifamily listings for long-term rental investment: Redfin CSV ingest, zero-API heuristic screen, RentCast enrichment, and cash-on-cash reporting across price scenarios.",
+      "source": "./plugins/rental",
+      "category": "productivity"
     }
   ]
 }
