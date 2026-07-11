@@ -79,6 +79,15 @@ def compute_returns(prop: Property, assumptions: dict, price: float,
     }
 
 
+class UnboundedReturnError(Exception):
+    """Raised when cash-on-cash clears target_coc but keeps improving with price
+    without a finite bound: every price above some point also clears the target,
+    so there is no coherent single "maximum offer price" to report. Distinct from
+    returning None, which means the target is unreachable at any price -- these
+    are different outcomes and must not be conflated under the same return value.
+    """
+
+
 def max_offer_price(prop: Property, assumptions: dict, effective_rate: float,
                     target_coc: float, strict_cashflow: bool = False,
                     lo: float = 10000.0, hi: float | None = None,
@@ -91,14 +100,20 @@ def max_offer_price(prop: Property, assumptions: dict, effective_rate: float,
     has a CONSTANT sign, so it is genuinely monotonic -- but the direction
     depends on the property's underlying economics, not always decreasing as
     price rises. A property whose baseline cash flow is already negative even
-    at a low price (C<0) can have cash_on_cash INCREASING toward a finite
-    asymptote -D/E as price grows, rather than decreasing. Whenever there is
-    any price-linked cost (mortgage debt service or a tax-fallback rate) and a
-    nonzero cash-invested fraction, that asymptote is <= 0, so for a normal
-    positive target_coc this regime can never actually clear the target -- but
-    we don't assume that by construction; we detect the regime and check
-    explicitly rather than relying on bisection logic that silently assumes
-    the decreasing case.
+    at a low price (C<0, when rehab==0) can have cash_on_cash INCREASING toward
+    a finite asymptote -D/E as price grows, rather than decreasing. Whenever
+    there is any price-linked cost (mortgage debt service or a tax-fallback
+    rate) and a nonzero cash-invested fraction, that asymptote is <= 0, so for
+    a normal positive target_coc this regime can never actually clear the
+    target -- but we don't assume that by construction; we detect the regime
+    and check explicitly rather than relying on bisection logic that silently
+    assumes the decreasing case.
+
+    Raises UnboundedReturnError if cash-on-cash is increasing and DOES clear
+    target_coc somewhere within the widened probe range: in that regime every
+    price above the crossover also clears the target, so there is no finite
+    maximum to report (this requires an unusual target_coc, e.g. negative, to
+    reach in practice -- see tests).
     """
     def coc(price: float) -> float:
         return compute_returns(prop, assumptions, price, effective_rate,
@@ -118,10 +133,16 @@ def max_offer_price(prop: Property, assumptions: dict, effective_rate: float,
         far = max(hi * 1000.0, 1e9)
         if coc(far) < target_coc:
             return None  # asymptote (or trend well beyond hi) stays below target
-        # Cash-on-cash improves with price and clears target only far beyond
-        # our search range: there's no finite "maximum" offer in that regime
-        # (every higher price also qualifies), so we decline to fabricate one.
-        return None
+        # Cash-on-cash clears target somewhere beyond hi and keeps improving:
+        # every higher price also qualifies, so there is no finite "maximum"
+        # to report. Raise rather than returning None, which would wrongly
+        # claim the target is unreachable when it's actually reachable (just
+        # unbounded above).
+        raise UnboundedReturnError(
+            f"cash_on_cash rises toward/past target_coc={target_coc} as price "
+            f"increases without a finite maximum within the search range "
+            f"(probed up to {far}); no single 'max offer price' exists here."
+        )
 
     # Decreasing (or flat) regime -- the expected case: bisect for the
     # crossover between "still meets target" (lower prices) and "doesn't"

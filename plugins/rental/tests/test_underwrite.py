@@ -2,6 +2,7 @@ import pytest
 from lib.models import Property
 from lib.underwrite import (
     monthly_payment, compute_returns, max_offer_price, build_scenarios,
+    UnboundedReturnError,
 )
 
 # Assumptions used across the worked example.
@@ -66,15 +67,18 @@ def test_max_offer_price_none_when_unachievable():
     assert price is None
 
 
-def test_max_offer_price_increasing_regime_widens_probe_past_small_hi():
-    # Same "cost exceeds income at any price" property as the unachievable test,
-    # but this time with an explicit, deliberately small `hi` (20000, barely past
-    # `lo`) to prove the widened probe (max(hi*1000, 1e9)) is what lets the
-    # function reach a confident answer -- not merely luck of a large default hi.
-    p = Property(address="Z", list_price=500000.0, gross_monthly_rent=100.0)
-    price = max_offer_price(p, ASSUMPTIONS, effective_rate=0.075, target_coc=0.08,
-                            hi=20000.0)
-    assert price is None
+def test_max_offer_price_raises_when_cash_on_cash_improves_without_bound():
+    # Same "cost exceeds income at any price" property as the unachievable test, but
+    # with a NEGATIVE target (an edge case, not a realistic config value, but the only
+    # way to make cash_on_cash's increasing-but-negative trajectory actually clear a
+    # target). Old code's first guard (coc(lo) < target -> None) would have wrongly
+    # reported this as unreachable; it IS reachable at high-enough prices, just with
+    # no finite maximum (every higher price also clears it). The hardened version must
+    # distinguish "unreachable" from "reachable without a finite bound" instead of
+    # conflating both under None.
+    p = Property(address="W", list_price=500000.0, gross_monthly_rent=100.0)
+    with pytest.raises(UnboundedReturnError):
+        max_offer_price(p, ASSUMPTIONS, effective_rate=0.075, target_coc=-0.5)
 
 
 def test_build_scenarios_labels_and_flags():
