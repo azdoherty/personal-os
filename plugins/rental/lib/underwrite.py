@@ -85,8 +85,20 @@ def max_offer_price(prop: Property, assumptions: dict, effective_rate: float,
                     tol: float = 1.0) -> float | None:
     """Highest price whose cash-on-cash still meets target_coc.
 
-    cash_on_cash is strictly decreasing in price, so we bisect. Returns None when
-    even the lowest bound cannot reach the target (property never cash-flows enough).
+    cash_on_cash(price) is a linear-fractional (Mobius) function of price:
+    cashflow(price) = C - D*price (C, D constants derived from rent/expenses/
+    financing) and cash_invested(price) = E*price + rehab (E>0). Its derivative
+    has a CONSTANT sign, so it is genuinely monotonic -- but the direction
+    depends on the property's underlying economics, not always decreasing as
+    price rises. A property whose baseline cash flow is already negative even
+    at a low price (C<0) can have cash_on_cash INCREASING toward a finite
+    asymptote -D/E as price grows, rather than decreasing. Whenever there is
+    any price-linked cost (mortgage debt service or a tax-fallback rate) and a
+    nonzero cash-invested fraction, that asymptote is <= 0, so for a normal
+    positive target_coc this regime can never actually clear the target -- but
+    we don't assume that by construction; we detect the regime and check
+    explicitly rather than relying on bisection logic that silently assumes
+    the decreasing case.
     """
     def coc(price: float) -> float:
         return compute_returns(prop, assumptions, price, effective_rate,
@@ -94,17 +106,38 @@ def max_offer_price(prop: Property, assumptions: dict, effective_rate: float,
 
     if hi is None:
         hi = max(prop.list_price, lo) * 2.0
-    if coc(lo) < target_coc:
-        return None          # unachievable even cheap
-    if coc(hi) >= target_coc:
+
+    coc_lo, coc_hi = coc(lo), coc(hi)
+
+    if coc_hi > coc_lo:
+        # Increasing regime (see docstring). Widen the probe well past `hi`
+        # before concluding the target is unreachable -- don't trust the
+        # caller-supplied hi to already capture the asymptote.
+        if coc_lo >= target_coc:
+            return hi  # already meets target at the cheapest end; stays true
+        far = max(hi * 1000.0, 1e9)
+        if coc(far) < target_coc:
+            return None  # asymptote (or trend well beyond hi) stays below target
+        # Cash-on-cash improves with price and clears target only far beyond
+        # our search range: there's no finite "maximum" offer in that regime
+        # (every higher price also qualifies), so we decline to fabricate one.
+        return None
+
+    # Decreasing (or flat) regime -- the expected case: bisect for the
+    # crossover between "still meets target" (lower prices) and "doesn't"
+    # (higher prices).
+    if coc_lo < target_coc:
+        return None          # unachievable even at the cheap end
+    if coc_hi >= target_coc:
         return hi            # target met even at the high bound
-    while hi - lo > tol:
-        mid = (lo + hi) / 2.0
+    search_lo, search_hi = lo, hi
+    while search_hi - search_lo > tol:
+        mid = (search_lo + search_hi) / 2.0
         if coc(mid) >= target_coc:
-            lo = mid
+            search_lo = mid
         else:
-            hi = mid
-    return lo
+            search_hi = mid
+    return search_lo
 
 
 def build_scenarios(prop: Property, assumptions: dict, effective_rate: float,

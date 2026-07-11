@@ -66,6 +66,17 @@ def test_max_offer_price_none_when_unachievable():
     assert price is None
 
 
+def test_max_offer_price_increasing_regime_widens_probe_past_small_hi():
+    # Same "cost exceeds income at any price" property as the unachievable test,
+    # but this time with an explicit, deliberately small `hi` (20000, barely past
+    # `lo`) to prove the widened probe (max(hi*1000, 1e9)) is what lets the
+    # function reach a confident answer -- not merely luck of a large default hi.
+    p = Property(address="Z", list_price=500000.0, gross_monthly_rent=100.0)
+    price = max_offer_price(p, ASSUMPTIONS, effective_rate=0.075, target_coc=0.08,
+                            hi=20000.0)
+    assert price is None
+
+
 def test_build_scenarios_labels_and_flags():
     p = Property(address="X", list_price=200000.0, gross_monthly_rent=3500.0)
     scenarios, max_price = build_scenarios(p, ASSUMPTIONS, effective_rate=0.075)
