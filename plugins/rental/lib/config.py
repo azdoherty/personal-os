@@ -35,7 +35,10 @@ def defaults_path() -> Path:
 
 def _load_json(path: Path) -> dict:
     with open(path, encoding="utf-8") as f:
-        return json.load(f)
+        try:
+            return json.load(f)
+        except json.JSONDecodeError as e:
+            raise ConfigError(f"{path} is not valid JSON: {e}") from e
 
 
 def load_config() -> dict | None:

@@ -41,3 +41,11 @@ def test_validate_passes_on_complete_config():
         "rentcast_api_key": "test-key",
     })
     assert cfg.validate(good) == []
+
+
+def test_load_config_raises_config_error_on_malformed_json(monkeypatch, tmp_path):
+    bad = tmp_path / "broken.json"
+    bad.write_text("{not valid json", encoding="utf-8")
+    monkeypatch.setenv("RENTAL_CONFIG", str(bad))
+    with pytest.raises(cfg.ConfigError):
+        cfg.load_config()
