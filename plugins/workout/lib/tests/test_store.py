@@ -74,14 +74,10 @@ def test_connect_auto_seeds_reference_tables_on_a_fresh_database():
     assert source_count >= 5
 
 
-def test_connect_does_not_duplicate_seed_rows_on_reconnect():
-    import sqlite3
+def test_connect_does_not_reseed_an_already_seeded_database():
+    from unittest.mock import patch
 
-    path = ":memory:"
-    conn1 = sqlite3.connect(path)
-    conn1.execute("PRAGMA foreign_keys = ON")
-    store.init_db(conn1)
-    store._seed_if_empty(conn1)
-    store._seed_if_empty(conn1)
-    count = conn1.execute("SELECT COUNT(*) FROM exercises").fetchone()[0]
-    assert count < 100  # sanity: didn't double-insert
+    conn = store.connect(":memory:")  # auto-seeds once via connect()
+    with patch("seed.seed_all") as mock_seed_all:
+        store._seed_if_empty(conn)
+        mock_seed_all.assert_not_called()
