@@ -11,6 +11,12 @@
       "description": "Literature review for purchases and questions: searches Reddit (with engagement data), HN, StackExchange, and the web; verifies brand legitimacy; scores source trust; produces a cited summary.",
       "source": "./plugins/research",
       "category": "productivity"
+    },
+    {
+      "name": "workout",
+      "description": "Progressive home-strength programs from a curated template + generator engine, equipment-aware and injury-aware; equipment gap advisor with research-plugin handoff; local SQLite storage; printable markdown/CSV/artifact outputs.",
+      "source": "./plugins/workout",
+      "category": "productivity"
     }
   ]
 }
