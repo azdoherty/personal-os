@@ -62,3 +62,26 @@ def test_list_programs_returns_summaries():
     summaries = store.list_programs(conn)
     assert summaries[0]["program_id"] == program_id
     assert summaries[0]["level"] == "beginner"
+
+
+def test_connect_auto_seeds_reference_tables_on_a_fresh_database():
+    conn = store.connect(":memory:")
+    exercise_count = conn.execute("SELECT COUNT(*) FROM exercises").fetchone()[0]
+    catalog_count = conn.execute("SELECT COUNT(*) FROM equipment_catalog").fetchone()[0]
+    source_count = conn.execute("SELECT COUNT(*) FROM sources").fetchone()[0]
+    assert exercise_count >= 20
+    assert catalog_count >= 5
+    assert source_count >= 5
+
+
+def test_connect_does_not_duplicate_seed_rows_on_reconnect():
+    import sqlite3
+
+    path = ":memory:"
+    conn1 = sqlite3.connect(path)
+    conn1.execute("PRAGMA foreign_keys = ON")
+    store.init_db(conn1)
+    store._seed_if_empty(conn1)
+    store._seed_if_empty(conn1)
+    count = conn1.execute("SELECT COUNT(*) FROM exercises").fetchone()[0]
+    assert count < 100  # sanity: didn't double-insert

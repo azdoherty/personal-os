@@ -112,14 +112,24 @@ def default_db_path() -> Path:
 
 
 def connect(db_path=None) -> sqlite3.Connection:
-    """Open (creating parent dirs as needed) and initialize the database."""
+    """Open (creating parent dirs as needed), initialize, and seed the
+    database from references/ if its reference tables are empty."""
     path = Path(db_path) if db_path else default_db_path()
     if str(path) != ":memory:":
         path.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(str(path))
     conn.execute("PRAGMA foreign_keys = ON")
     init_db(conn)
+    _seed_if_empty(conn)
     return conn
+
+
+def _seed_if_empty(conn: sqlite3.Connection) -> None:
+    count = conn.execute("SELECT COUNT(*) FROM exercises").fetchone()[0]
+    if count == 0:
+        import seed
+
+        seed.seed_all(conn)
 
 
 def init_db(conn: sqlite3.Connection) -> None:
