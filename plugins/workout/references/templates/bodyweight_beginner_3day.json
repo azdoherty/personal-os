@@ -1,0 +1,39 @@
+{
+  "template_id": "bodyweight_beginner_3day",
+  "level": "beginner",
+  "goal": "general_strength",
+  "days_per_week": 3,
+  "session_minutes": 30,
+  "required_equipment": ["sturdy_table"],
+  "progression_model": "variation-ladder",
+  "block_weeks": 8,
+  "sessions": [
+    {
+      "day": 1,
+      "label": "Full Body A",
+      "exercises": [
+        {"ladder_group": "squat_bw", "sets": 3, "weeks_per_rung": 2, "tempo": "2-0-2", "rest": "60s", "notes": "Sit the hips back; keep the chest tall."},
+        {"ladder_group": "push_bw", "sets": 3, "weeks_per_rung": 2, "tempo": "2-0-2", "rest": "60s", "notes": "Keep the body in a straight line, elbows ~45 degrees from the torso."},
+        {"ladder_group": "core_bw", "sets": 3, "weeks_per_rung": 2, "tempo": "n/a", "rest": "30s", "notes": "Move slowly; keep the low back pressed to the floor."}
+      ]
+    },
+    {
+      "day": 2,
+      "label": "Full Body B",
+      "exercises": [
+        {"ladder_group": "hinge_bw", "sets": 3, "weeks_per_rung": 2, "tempo": "2-0-2", "rest": "60s", "notes": "Squeeze the glutes at the top; avoid arching the low back."},
+        {"ladder_group": "pull_bw", "sets": 3, "weeks_per_rung": 2, "tempo": "2-0-2", "rest": "60s", "notes": "Use a sturdy table; pull the chest toward the table edge."},
+        {"ladder_group": "core_bw", "sets": 3, "weeks_per_rung": 2, "tempo": "n/a", "rest": "30s", "notes": "Move slowly; keep the low back pressed to the floor."}
+      ]
+    },
+    {
+      "day": 3,
+      "label": "Full Body C",
+      "exercises": [
+        {"ladder_group": "squat_bw", "sets": 3, "weeks_per_rung": 2, "tempo": "2-0-2", "rest": "60s", "notes": "Sit the hips back; keep the chest tall."},
+        {"ladder_group": "push_bw", "sets": 3, "weeks_per_rung": 2, "tempo": "2-0-2", "rest": "60s", "notes": "Keep the body in a straight line, elbows ~45 degrees from the torso."},
+        {"ladder_group": "hinge_bw", "sets": 3, "weeks_per_rung": 2, "tempo": "2-0-2", "rest": "60s", "notes": "Squeeze the glutes at the top; avoid arching the low back."}
+      ]
+    }
+  ]
+}
