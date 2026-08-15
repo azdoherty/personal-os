@@ -1936,6 +1936,8 @@ git commit -m "feat(workout): add markdown, CSV, and JSON renderers"
 - Create: `plugins/workout/references/sources.md`
 - Create: `plugins/workout/lib/seed.py`
 - Test: `plugins/workout/lib/tests/test_seed.py`
+- Modify: `plugins/workout/lib/store.py` (wire auto-seeding into `connect()`)
+- Modify: `plugins/workout/lib/tests/test_store.py` (append 2 tests for the new auto-seed behavior)
 
 **Interfaces:**
 - Consumes: `store.connect` (Task 3, for tests only).
