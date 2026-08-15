@@ -55,6 +55,13 @@ def test_rank_equipment_gaps_respects_active_constraints():
     pull_up = next(r for r in ranked if r["equipment_id"] == "pull_up_bar")
     assert pull_up["unlocks_exercise_count"] == 0
 
+    # dumbbell alone fully satisfies db_goblet_squat's equipment requirement,
+    # so a nonzero count here would only be prevented by constraint
+    # filtering (the "grip" flag) -- this isolates the constraint check from
+    # the equipment-subset check, unlike the pull_up_bar case above.
+    dumbbell = next(r for r in ranked if r["equipment_id"] == "dumbbell")
+    assert dumbbell["unlocks_exercise_count"] == 0
+
 
 def test_thin_or_missing_patterns_flags_uncovered_patterns():
     thin = advisor.thin_or_missing_patterns(SAMPLE_EXERCISES, equipment_ids=[], excluded_constraints=[])
