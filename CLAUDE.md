@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 `personal-os` is a Claude Code **plugin marketplace** (declared in `.claude-plugin/marketplace.json`) that currently hosts one plugin: `research` at `plugins/research/`. Add new plugins by dropping them under `plugins/` and appending an entry to the marketplace manifest.
 
-The `research` plugin (v0.5.0, 9 skills) does literature review for purchases, scientific/medical questions, and other "I need to read 50 threads/papers" research tasks. It fans out across Reddit, HN/StackExchange, the open web, and peer-reviewed literature (PubMed, Semantic Scholar, OpenAlex, arXiv), then trust-scores and summarizes.
+The `research` plugin (v0.6.0, 10 skills) does literature review for purchases, scientific/medical questions, and other "I need to read 50 threads/papers" research tasks. It fans out across Reddit, HN/StackExchange, the open web, and peer-reviewed literature (PubMed, Semantic Scholar, OpenAlex, arXiv), then trust-scores and summarizes.
 
 ## Common commands
 
@@ -52,6 +52,7 @@ The plugin is organized in three layers — read SKILL.md files in this order to
    - `brand-check` — 5-signal brand legitimacy: Reddit organic, independent reviewer hits (passed in from WebSearch), website footprint (with Shopify/Squarespace/parked-domain detection), domain age via RDAP, and integrity history (auto-detected from a local CPSC recall corpus + manual WebSearch hits)
    - `review-pattern` — listing-level review authenticity (rating skew, template language, n-gram duplicates, burst posting, etc.)
    - `source-trust` — combines `domain-prior × recency × brand-legitimacy + engagement + corroboration + study-type-bonus` into a 0–100 trust score
+   - `medical-evidence` — for health questions: enumerates the full solution space (clinical/procedural/community/adjacent lanes), decomposes into atomic claims, and grades each via `grade_claim.py` on three independent axes (evidence 1-5, risk/cost, community frequency) with an `absence_reason` that keeps "untested because unpatentable" distinct from "tested and refuted". Emits a ranked ledger + clinician hand-off. Invoked by `literature-review` for medical intent and standalone.
 
 3. **Orchestration + output**:
    - `literature-review` — classifies user intent (`purchase | scientific | medical | investment | technical | opinion | factual`), fans out across the right source skills in parallel, runs brand-check for purchases, scores, and hands off to summarize

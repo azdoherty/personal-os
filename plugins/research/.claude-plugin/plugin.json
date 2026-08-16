@@ -1,7 +1,7 @@
 {
   "name": "research",
-  "version": "0.5.0",
-  "description": "Literature review across Reddit (with engagement), HN/StackExchange, the web, AND peer-reviewed academic literature (PubMed, Semantic Scholar, OpenAlex, arXiv); brand-legitimacy verification (5-signal); listing-level review-pattern authenticity check; trust-weighted citation synthesis with evidence-pyramid bonuses for academic sources.",
+  "version": "0.6.0",
+  "description": "Literature review across Reddit (with engagement), HN/StackExchange, the web, AND peer-reviewed academic literature (PubMed, Semantic Scholar, OpenAlex, arXiv); brand-legitimacy verification (5-signal); listing-level review-pattern authenticity check; trust-weighted citation synthesis with evidence-pyramid bonuses for academic sources. Includes medical-evidence: enumerate-then-grade rigor for health questions (three-axis claim grading, absence-reason tracking).",
   "author": {
     "name": "azdoh",
     "email": "your-email@example.com"

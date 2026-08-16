@@ -108,6 +108,14 @@ done
 
 The `brand_legitimacy.json` map should use bare domains (`auravex.io`, `halcyra.com`) for brand-owned sites and `domain/path-prefix` strings (`amazon.com/dp/B0XYZ` lower-cased) for marketplace listings.
 
+### Step 3.5 (medical/scientific intent): Grade claims with medical-evidence
+
+If intent is `medical` (or a scientific health question), invoke the `medical-evidence` skill
+before scoring. It enumerates the full solution space, decomposes results into atomic claims,
+and grades each with `grade_claim.py`. Its ranked ledger — not the raw source list — becomes
+the backbone of the summary. Do not hand-wave a recommendation past it; a `mechanism-only` or
+`marketing-claim` verdict must be reported as such.
+
 ### Step 4: Score
 
 ```bash

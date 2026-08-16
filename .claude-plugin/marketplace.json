@@ -8,7 +8,7 @@
   "plugins": [
     {
       "name": "research",
-      "description": "Literature review for purchases and questions: searches Reddit (with engagement data), HN, StackExchange, and the web; verifies brand legitimacy; scores source trust; produces a cited summary.",
+      "description": "Literature review for purchases and questions: searches Reddit (with engagement data), HN, StackExchange, and the web; verifies brand legitimacy; scores source trust; produces a cited summary. Health questions route through a medical-evidence rigor layer that enumerates options and grades claims by evidence, risk/cost, and community frequency.",
       "source": "./plugins/research",
       "category": "productivity"
     }
