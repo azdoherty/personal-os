@@ -1,6 +1,6 @@
 import os, sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "scripts"))
-from grade_claim import evidence_grade, cost_tier, risk_cost_grade
+from grade_claim import evidence_grade, cost_tier, risk_cost_grade, classify
 
 
 def test_meta_analysis_clinical_direct_is_high():
@@ -44,3 +44,32 @@ def test_permanent_reversibility_caps_at_2():
 
 def test_high_risk_bottoms_out():
     assert risk_cost_grade("high", 90, "immediate") == 1
+
+
+def test_collagen_is_well_supported():
+    assert classify(4, 5, "clinical-outcome", "direct", "consistent", None, 20, "low") == "well-supported"
+
+
+def test_citrulline_is_worth_trying_anyway():
+    # weak evidence, plausible mechanism, cheap, safe, structurally understudied
+    assert classify(2, 5, "mechanism-only", "distant", "mixed",
+                    "untested-low-commercial-incentive", 12, "low") == "worth-trying-anyway"
+
+
+def test_moringa_for_tendon_is_marketing_claim():
+    assert classify(1, 5, "mechanism-only", "none", "mixed",
+                    "untested-implausible", 10, "low") == "marketing-claim"
+
+
+def test_urolithin_a_is_unproven_and_costly():
+    assert classify(2, 3, "clinical-outcome", "distant", "mixed",
+                    "too-new", 80, "low") == "unproven-and-costly"
+
+
+def test_bpc157_is_avoid():
+    assert classify(2, 1, "mechanism-only", "none", "mixed",
+                    "too-new", 60, "high") == "avoid"
+
+
+def test_refuted_is_avoid():
+    assert classify(1, 5, "clinical-outcome", "direct", "contradicted", None, 10, "low") == "avoid"

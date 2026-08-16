@@ -45,3 +45,19 @@ def risk_cost_grade(risk, cost_per_month, reversibility):
     if reversibility == "permanent":
         grade = min(grade, 2)
     return grade
+
+
+def classify(ev, rc, outcome_type, population_match, consistency, absence_reason, cost_per_month, risk):
+    if consistency == "contradicted":
+        return "avoid"                       # tested and refuted
+    if risk == "high":
+        return "avoid"                       # risk dominates any plausible benefit
+    if ev >= 4 and outcome_type == "clinical-outcome" and population_match in ("direct", "adjacent"):
+        return "well-supported"
+    if absence_reason == "untested-implausible":
+        return "marketing-claim"             # promoted, no mechanism for THIS claim
+    if cost_tier(cost_per_month) == "high":
+        return "unproven-and-costly"
+    if absence_reason == "untested-low-commercial-incentive" and rc >= 4:
+        return "worth-trying-anyway"         # cheap, safe, structurally understudied
+    return "worth-trying-anyway" if rc >= 4 else "unproven-and-costly"
