@@ -34,7 +34,7 @@ below is seeded into the `sources` table by `lib/seed.py`.
 - url: https://peerj.com/articles/10663/
 - topic_tags: rpe, autoregulation, pain-cap
 - trust_tier: high
-- informs: RPE/pain-cap autoregulation in the progression engine
+- informs: the user-recorded RPE and pain columns on the printable tracker (v1 has no system-enforced cap in progression.py)
 
 ## hsr_vs_eccentric_achilles_rct
 - title: Heavy Slow Resistance Versus Eccentric Training as Treatment for Achilles Tendinopathy

@@ -67,6 +67,46 @@ def rank_equipment_gaps(exercises: list, catalog: list, owned_equipment_ids, exc
     return sorted(results, key=lambda r: r["score"], reverse=True)
 
 
+def find_equipment_bundles(exercises: list, catalog: list, owned_equipment_ids,
+                            excluded_constraints) -> list:
+    """Exercises that no *single* purchase can unlock, and the small set of
+    items that jointly would.
+
+    `rank_equipment_gaps` only ever simulates adding one item at a time, so
+    an exercise needing two missing pieces (band-assisted pull-ups need both
+    a pull-up bar and a resistance band) scores zero for each item on its own
+    and sinks to the bottom of the ranking. This surfaces those pairs/sets as
+    an informational note alongside the single-item ranking rather than
+    trying to optimise over every possible combination.
+    """
+    owned = set(owned_equipment_ids)
+    excluded = set(excluded_constraints)
+    by_id = {item["equipment_id"]: item for item in catalog}
+
+    bundles: dict = {}
+    for e in exercises:
+        if set(e.get("constraint_flags", [])) & excluded:
+            continue
+        missing = set(e.get("equipment_required", [])) - owned
+        if len(missing) < 2 or not missing.issubset(by_id):
+            continue
+        key = tuple(sorted(missing))
+        bundles.setdefault(key, []).append(e["exercise_id"])
+
+    results = []
+    for key, unlocked in bundles.items():
+        results.append({
+            "equipment_ids": list(key),
+            "names": [by_id[i]["name"] for i in key],
+            "approx_cost_usd": sum(by_id[i]["approx_cost_usd"] for i in key),
+            "unlocks_exercises": sorted(unlocked),
+            "unlocks_patterns": sorted({
+                e["movement_pattern"] for e in exercises if e["exercise_id"] in set(unlocked)
+            }),
+        })
+    return sorted(results, key=lambda r: (-len(r["unlocks_exercises"]), r["approx_cost_usd"]))
+
+
 def thin_or_missing_patterns(exercises: list, equipment_ids, excluded_constraints, threshold: int = 2) -> list:
     """Patterns with fewer than `threshold` eligible exercises -- worth
     flagging even before ranking specific equipment."""

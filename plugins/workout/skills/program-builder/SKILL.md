@@ -37,7 +37,7 @@ renders a printable output.
 
 2. **Build and render:**
    ```bash
-   python3 skills/program-builder/scripts/build.py \
+   python3 ${CLAUDE_PLUGIN_ROOT}/skills/program-builder/scripts/build.py \
        --level beginner --days 3 --minutes 30 \
        --equipment dumbbell,pull_up_bar \
        --constraints grip,arm-load \
@@ -46,7 +46,14 @@ renders a printable output.
    The script prints which curated template it used, or explains why it fell
    back to generating one (missing equipment, or the closest template
    conflicts with the stated constraints) -- relay that explanation to the
-   user so they understand where their program came from.
+   user so they understand where their program came from. It also prints any
+   movement-pattern slot that had to be dropped for lack of eligible
+   exercises, and the saved `program_id` (`Saved as prog_...`), which is how
+   the program is looked up again in the local store.
+
+   Unknown constraint flags or equipment ids exit non-zero with the legal set
+   printed -- fix the token and re-run rather than dropping it, or the
+   program will silently ignore a real constraint.
 
 3. **Deliver the output.** For `markdown`, offer to also produce it as an
    HTML artifact (styled, printable) via the `Artifact` tool -- follow the

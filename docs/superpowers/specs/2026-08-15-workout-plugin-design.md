@@ -161,9 +161,19 @@ SQLite on init (`seed.py`). **Backup = copy one file** to Google Drive / Dropbox
 plus a JSON export for portability. This model carries directly into the Android app —
 local DB, user-controlled backup, zero cloud dependency.
 
+**v1 read paths (as built).** SQLite is the system of record for *user* data —
+`equipment_profile`, `programs`, `sessions`, `program_exercises`. The *reference* tables
+(`exercises`, `equipment_catalog`, `sources`) are seeded copies: `lib/exercises.py` and
+`lib/advisor.py` read the `references/` JSON/markdown files directly, not the SQLite
+copies, so those tables are not yet consumed at runtime. They exist for portability —
+the eventual Android app ships a database, not a checkout — and are kept fresh by
+`equipment-intake --reseed`. Moving `lib/` onto the SQLite copies is a later change, not
+a v1 claim.
+
 ## 7. Outputs
 
-All outputs are pure renders of the SQLite data (no logic in renderers):
+All outputs are pure renders of a `Program` object (no logic in renderers) — the same
+object that is written to and read back from SQLite:
 - **Markdown** — canonical printable program + tracker ("print and fill out")
 - **CSV** — printable log grid (row per set/day); also the import path once logging goes digital
 - **HTML artifact** — polished, theme-aware on-screen/printable version

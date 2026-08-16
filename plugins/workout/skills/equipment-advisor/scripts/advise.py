@@ -14,6 +14,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "lib"))
 import advisor  # noqa: E402
 import exercises as exercises_mod  # noqa: E402
+import validation  # noqa: E402
 
 
 def main() -> int:
@@ -23,16 +24,25 @@ def main() -> int:
     parser.add_argument("--top", type=int, default=5, help="how many ranked recommendations to print")
     args = parser.parse_args()
 
-    owned = [e.strip() for e in args.owned.split(",") if e.strip()]
-    constraints = [c.strip() for c in args.constraints.split(",") if c.strip()]
+    try:
+        owned = validation.validate_equipment(validation.split_tokens(args.owned))
+        constraints = validation.validate_constraints(validation.split_tokens(args.constraints))
+    except validation.TokenError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
 
     exercises = exercises_mod.load_exercises()
     catalog = advisor.load_equipment_catalog()
 
     thin = advisor.thin_or_missing_patterns(exercises, owned, constraints)
     ranked = advisor.rank_equipment_gaps(exercises, catalog, owned, constraints)[: args.top]
+    bundles = advisor.find_equipment_bundles(exercises, catalog, owned, constraints)
 
-    print(json.dumps({"thin_or_missing_patterns": thin, "recommendations": ranked}, indent=2))
+    print(json.dumps({
+        "thin_or_missing_patterns": thin,
+        "recommendations": ranked,
+        "bundles": bundles,
+    }, indent=2))
     return 0
 
 

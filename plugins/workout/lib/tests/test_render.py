@@ -35,6 +35,12 @@ def test_render_markdown_includes_header_and_exercises():
     assert "15" in text
 
 
+def test_render_markdown_carries_the_not_medical_advice_disclaimer():
+    text = render.render_markdown(_program())
+    assert "not medical advice" in text
+    assert text.index("not medical advice") < text.index("Week 1")
+
+
 def test_render_markdown_shows_fill_in_blank_for_unset_load():
     program = _program()
     program.weeks[0].sessions[0].exercises[1].load.value = None

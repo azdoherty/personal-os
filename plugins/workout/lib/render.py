@@ -30,6 +30,8 @@ def render_markdown(program: Program) -> str:
         f"**Constraints honored:** {', '.join(meta.constraints) or 'none'}  \n"
         f"**Source:** {meta.source}  \n"
         f"**Progression model:** {program.progression.model}\n\n"
+        "> This is a general fitness program, not medical advice — consult a professional "
+        "for any injury or medical condition.\n\n"
     )
     for week in program.weeks:
         out.write(f"## Week {week.number}\n\n")

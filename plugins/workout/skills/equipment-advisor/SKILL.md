@@ -23,15 +23,26 @@ already own, and (2) once they've picked something, hand off to `research`'s
 ### 1. Gap analysis
 
 ```bash
-python3 skills/equipment-advisor/scripts/advise.py \
+python3 ${CLAUDE_PLUGIN_ROOT}/skills/equipment-advisor/scripts/advise.py \
     --owned dumbbell,sled --constraints arm-load,grip --top 5
 ```
 
-Returns `thin_or_missing_patterns` (movement patterns with little/no eligible
-coverage right now) and `recommendations` (equipment ranked by how many new
-exercises it would unlock, weighted toward cheap + high-unlock items, with
-constraint-flagged exercises excluded from the count -- so an item that would
-only unlock exercises the user's injury rules out won't be recommended).
+Returns three things:
+
+- `thin_or_missing_patterns` -- movement patterns with little/no eligible
+  coverage right now.
+- `recommendations` -- equipment ranked by how many new exercises it would
+  unlock, weighted toward cheap + high-unlock items, with constraint-flagged
+  exercises excluded from the count, so an item that would only unlock
+  exercises the user's injury rules out won't be recommended.
+- `bundles` -- pairs/sets that only pay off when bought *together*. The
+  ranking scores one item at a time, so each half of a pair scores zero on
+  its own; a band and a doorway pull-up bar each unlock nothing alone but
+  unlock assisted pull-ups together. Mention these when a pattern shows up
+  as thin/missing but nothing single ranks high against it.
+
+Unknown equipment ids or constraint flags exit non-zero with the legal set
+printed -- fix the token rather than dropping it.
 
 Present this conversationally: lead with the biggest gap, name the specific
 equipment that best closes it, and note its approximate cost/space tier from
