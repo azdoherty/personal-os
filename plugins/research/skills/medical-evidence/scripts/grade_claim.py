@@ -25,3 +25,23 @@ def evidence_grade(outcome_type, best_study_tier, population_match, consistency,
     if n_studies <= 0:
         base = min(base, 1)
     return max(1, min(5, base))
+
+
+_RISK = {"low": 3, "moderate": 1, "high": 0}
+_COST = {"low": 2, "moderate": 1, "high": 0}
+
+
+def cost_tier(cost_per_month):
+    if cost_per_month <= 15:
+        return "low"
+    if cost_per_month <= 50:
+        return "moderate"
+    return "high"
+
+
+def risk_cost_grade(risk, cost_per_month, reversibility):
+    score = _RISK[risk] + _COST[cost_tier(cost_per_month)]
+    grade = max(1, min(5, score))
+    if reversibility == "permanent":
+        grade = min(grade, 2)
+    return grade
