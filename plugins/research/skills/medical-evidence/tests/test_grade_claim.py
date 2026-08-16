@@ -1,6 +1,8 @@
-import os, sys
+import os, sys, json, subprocess
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "scripts"))
-from grade_claim import evidence_grade, cost_tier, risk_cost_grade, classify
+from grade_claim import evidence_grade, cost_tier, risk_cost_grade, classify, hype_risk, required_hedge, grade
+
+SCRIPT = os.path.join(os.path.dirname(__file__), "..", "scripts", "grade_claim.py")
 
 
 def test_meta_analysis_clinical_direct_is_high():
@@ -73,3 +75,48 @@ def test_bpc157_is_avoid():
 
 def test_refuted_is_avoid():
     assert classify(1, 5, "clinical-outcome", "direct", "contradicted", None, 10, "low") == "avoid"
+
+
+def test_hype_risk_true_when_popular_but_no_evidence():
+    assert hype_risk("high", 2) is True
+    assert hype_risk("low", 2) is False
+
+
+def test_hedge_exists_for_every_quadrant():
+    for q in ("well-supported", "worth-trying-anyway", "unproven-and-costly",
+              "marketing-claim", "avoid"):
+        assert required_hedge(q)
+
+
+def test_grade_produces_full_record():
+    claim = {
+        "claim": "L-citrulline improves tendon healing in adults with tendinosis",
+        "outcome_type": "mechanism-only", "best_study_tier": "in-vitro",
+        "population_match": "none", "consistency": "mixed", "n_studies": 0,
+        "absence_reason": "untested-low-commercial-incentive",
+        "risk": "low", "cost_per_month": 12, "reversibility": "immediate",
+        "community_frequency": "moderate",
+    }
+    out = grade(claim)
+    assert out["verdict_quadrant"] == "worth-trying-anyway"
+    assert out["evidence_grade"] == 1
+    assert out["required_hedge"]
+    assert out["what_would_change_this"]
+
+
+def test_main_sorts_list_by_priority(tmp_path):
+    claims = [
+        {"claim": "weak", "outcome_type": "mechanism-only", "best_study_tier": "in-vitro",
+         "population_match": "none", "consistency": "mixed", "n_studies": 0,
+         "absence_reason": "too-new", "risk": "high", "cost_per_month": 90,
+         "reversibility": "immediate", "community_frequency": "none"},
+        {"claim": "strong", "outcome_type": "clinical-outcome", "best_study_tier": "meta-analysis",
+         "population_match": "direct", "consistency": "consistent", "n_studies": 5,
+         "absence_reason": None, "risk": "low", "cost_per_month": 10,
+         "reversibility": "immediate", "community_frequency": "none"},
+    ]
+    res = subprocess.run([sys.executable, SCRIPT], input=json.dumps(claims),
+                         capture_output=True, text=True)
+    assert res.returncode == 0
+    parsed = json.loads(res.stdout)
+    assert parsed[0]["claim"] == "strong"   # highest priority first

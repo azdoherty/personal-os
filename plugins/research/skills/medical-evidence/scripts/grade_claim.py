@@ -61,3 +61,70 @@ def classify(ev, rc, outcome_type, population_match, consistency, absence_reason
     if absence_reason == "untested-low-commercial-incentive" and rc >= 4:
         return "worth-trying-anyway"         # cheap, safe, structurally understudied
     return "worth-trying-anyway" if rc >= 4 else "unproven-and-costly"
+
+
+_HEDGE = {
+    "well-supported": "Supported by human outcome evidence in a matching population.",
+    "worth-trying-anyway": "Plausible mechanism and low risk/cost, but NOT proven for this "
+                           "outcome. Frame as a cheap bet, never a treatment to rely on.",
+    "unproven-and-costly": "Weak evidence and real expense — fund this only after the "
+                           "well-supported items.",
+    "marketing-claim": "No human evidence and no mechanism for this specific claim; treat as "
+                       "marketing until a study exists.",
+    "avoid": "Either refuted, or the risk/irreversibility outweighs any plausible benefit.",
+}
+
+
+def hype_risk(community_frequency, ev):
+    return community_frequency == "high" and ev <= 2
+
+
+def required_hedge(quadrant):
+    return _HEDGE[quadrant]
+
+
+def what_would_change_this(outcome_type, population_match, absence_reason):
+    if absence_reason == "tested-and-refuted":
+        return "A well-powered replication reversing the negative finding."
+    if outcome_type in ("mechanism-only", "surrogate"):
+        return ("A human RCT measuring the actual clinical outcome (not the mechanism or a "
+                "surrogate marker) in a matching population.")
+    if population_match in ("distant", "none"):
+        return "A trial in a population like the user's, rather than extrapolated from another group."
+    return "Larger or more consistent human trials replicating the effect."
+
+
+def grade(claim):
+    ev = evidence_grade(claim["outcome_type"], claim["best_study_tier"],
+                        claim["population_match"], claim["consistency"], claim.get("n_studies", 0))
+    rc = risk_cost_grade(claim["risk"], claim["cost_per_month"], claim["reversibility"])
+    quadrant = classify(ev, rc, claim["outcome_type"], claim["population_match"],
+                        claim["consistency"], claim.get("absence_reason"),
+                        claim["cost_per_month"], claim["risk"])
+    freq = claim.get("community_frequency", "none")
+    return {
+        "claim": claim["claim"],
+        "evidence_grade": ev,
+        "risk_cost_grade": rc,
+        "community_frequency": freq,
+        "verdict_quadrant": quadrant,
+        "hype_risk": hype_risk(freq, ev),
+        "absence_reason": claim.get("absence_reason"),
+        "priority_score": ev + rc,
+        "required_hedge": required_hedge(quadrant),
+        "what_would_change_this": what_would_change_this(
+            claim["outcome_type"], claim["population_match"], claim.get("absence_reason")),
+    }
+
+
+def main():
+    data = json.load(sys.stdin)
+    claims = data if isinstance(data, list) else [data]
+    graded = [grade(c) for c in claims]
+    graded.sort(key=lambda g: g["priority_score"], reverse=True)
+    out = graded if isinstance(data, list) else graded[0]
+    print(json.dumps(out, ensure_ascii=True, indent=2))
+
+
+if __name__ == "__main__":
+    main()
