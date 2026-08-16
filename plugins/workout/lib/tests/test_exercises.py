@@ -52,6 +52,48 @@ def test_ladder_for_group_orders_by_rank():
     assert [e["exercise_id"] for e in ladder] == ["a", "a2"]
 
 
+def test_eligible_ladder_keeps_only_rungs_the_user_can_actually_do():
+    ladder = [
+        {"exercise_id": "r0", "movement_pattern": "pull", "equipment_required": [],
+         "constraint_flags": [], "ladder_group": "mixed", "ladder_rank": 0},
+        {"exercise_id": "r1", "movement_pattern": "pull", "equipment_required": ["pull_up_bar"],
+         "constraint_flags": [], "ladder_group": "mixed", "ladder_rank": 1},
+        {"exercise_id": "r2", "movement_pattern": "pull", "equipment_required": [],
+         "constraint_flags": ["grip"], "ladder_group": "mixed", "ladder_rank": 2},
+    ]
+    assert [e["exercise_id"] for e in ex_mod.eligible_ladder(ladder, "mixed", [], [])] == ["r0", "r2"]
+    assert [e["exercise_id"] for e in
+            ex_mod.eligible_ladder(ladder, "mixed", ["pull_up_bar"], ["grip"])] == ["r0", "r1"]
+    assert [e["exercise_id"] for e in
+            ex_mod.eligible_ladder(ladder, "mixed", [], ["grip", "arm-load"])] == ["r0"]
+
+
+def test_eligible_ladder_is_empty_when_no_rung_qualifies():
+    ladder = [
+        {"exercise_id": "r0", "movement_pattern": "pull", "equipment_required": ["barbell"],
+         "constraint_flags": [], "ladder_group": "mixed", "ladder_rank": 0},
+    ]
+    assert ex_mod.eligible_ladder(ladder, "mixed", [], []) == []
+
+
+@pytest.mark.parametrize("raw,expected", [
+    ("8-12", (8, 12, "")),
+    ("5", (5, 5, "")),
+    ("3-5 trips", (3, 5, "trips")),
+    ("8-10 / leg", (8, 10, "/ leg")),
+    ("30-45s", (30, 45, "s")),
+    ("AMRAP", None),
+    ("", None),
+])
+def test_parse_default_reps(raw, expected):
+    assert ex_mod.parse_default_reps(raw) == expected
+
+
+def test_every_shipped_exercise_has_parseable_default_reps():
+    for e in ex_mod.load_exercises():
+        assert ex_mod.parse_default_reps(e["default_reps"]) is not None, e["exercise_id"]
+
+
 def test_find_by_id_raises_for_unknown():
     with pytest.raises(KeyError):
         ex_mod.find_by_id(SAMPLE, "nonexistent")

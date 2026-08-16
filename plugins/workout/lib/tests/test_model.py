@@ -58,6 +58,22 @@ def test_bad_load_type_is_caught():
     assert any("load.type" in e for e in errors)
 
 
+def test_empty_session_is_caught():
+    program = _tiny_program()
+    program.weeks[0].sessions[0].exercises = []
+    errors = validate_program(program)
+    assert any("has no exercises" in e for e in errors)
+
+
+def test_program_with_every_session_empty_is_caught():
+    program = _tiny_program()
+    program.weeks[0].sessions = [
+        Session(day=1, label="A", exercises=[]), Session(day=1, label="B", exercises=[]),
+    ]
+    errors = validate_program(program)
+    assert len([e for e in errors if "has no exercises" in e]) == 2
+
+
 def test_session_day_out_of_range_is_caught():
     program = _tiny_program()
     program.weeks[0].sessions[0].day = 9

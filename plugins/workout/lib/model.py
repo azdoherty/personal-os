@@ -193,6 +193,11 @@ def validate_program(program: Program) -> list:
                 errors.append(
                     f"week {week.number} session day {session.day} outside 1..{meta.days_per_week}"
                 )
+            if not session.exercises:
+                errors.append(
+                    f"week {week.number} day {session.day} has no exercises -- "
+                    f"an empty session is not a usable program"
+                )
             for ex in session.exercises:
                 if ex.movement_pattern not in MOVEMENT_PATTERNS:
                     errors.append(

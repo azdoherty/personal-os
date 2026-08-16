@@ -4,7 +4,7 @@
   "goal": "general_strength",
   "days_per_week": 3,
   "session_minutes": 30,
-  "required_equipment": ["sturdy_table"],
+  "required_equipment": [],
   "progression_model": "variation-ladder",
   "block_weeks": 8,
   "sessions": [
