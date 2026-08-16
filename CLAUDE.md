@@ -4,9 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repository is
 
-`personal-os` is a Claude Code **plugin marketplace** (declared in `.claude-plugin/marketplace.json`) that currently hosts one plugin: `research` at `plugins/research/`. Add new plugins by dropping them under `plugins/` and appending an entry to the marketplace manifest.
+`personal-os` is a Claude Code **plugin marketplace** (declared in `.claude-plugin/marketplace.json`) that currently hosts two plugins: `research` at `plugins/research/` and `workout` at `plugins/workout/`. Add new plugins by dropping them under `plugins/` and appending an entry to the marketplace manifest.
 
 The `research` plugin (v0.5.0, 9 skills) does literature review for purchases, scientific/medical questions, and other "I need to read 50 threads/papers" research tasks. It fans out across Reddit, HN/StackExchange, the open web, and peer-reviewed literature (PubMed, Semantic Scholar, OpenAlex, arXiv), then trust-scores and summarizes.
+
+The `workout` plugin (v0.1.0, 3 skills) builds progressive home-strength programs tailored to the user's equipment and physical constraints. `equipment-intake` records what gear is owned; `program-builder` picks a curated template or falls back to a pool-based generator, applies progression (variation-ladder for bodyweight, double-progression for loaded work), and renders printable markdown/CSV/JSON; `equipment-advisor` ranks equipment gaps and hands off purchase decisions to the `research` plugin's `literature-review` skill. Shared logic lives in `plugins/workout/lib/` (stdlib-only, unit-tested); a local SQLite database (outside the repo) is the system of record, seeded from git-versioned `plugins/workout/references/`.
 
 ## Common commands
 
@@ -14,6 +16,7 @@ The `research` plugin (v0.5.0, 9 skills) does literature review for purchases, s
 # Validate manifests after any change
 claude plugin validate .                           # marketplace
 claude plugin validate plugins/research            # plugin
+claude plugin validate plugins/workout            # plugin
 
 # After bumping plugin version
 claude plugin update research@personal-os          # restart Claude Code to apply
@@ -28,9 +31,17 @@ python3 plugins/research/skills/reddit-search/scripts/search.py "ergonomic chair
 python3 plugins/research/skills/academic-search/scripts/search.py "vitamin D deficiency treatment" --sources pubmed,openalex
 python3 plugins/research/skills/brand-check/scripts/brand_check.py "Auravex" --reviewer-hits 3 --integrity-hits 0 --keywords "therapy,light"
 cat sources.json | python3 plugins/research/skills/source-trust/scripts/score.py
+
+# Workout plugin -- run the test suite
+cd plugins/workout && python -m pytest lib/tests -v
+
+# Workout plugin pipeline: intake -> build -> advise
+python plugins/workout/skills/equipment-intake/scripts/intake.py --set dumbbell,pull_up_bar
+python plugins/workout/skills/program-builder/scripts/build.py --level beginner --days 3 --minutes 30 --equipment dumbbell,pull_up_bar --format markdown --out program.md
+python plugins/workout/skills/equipment-advisor/scripts/advise.py --owned dumbbell,pull_up_bar
 ```
 
-There are no automated tests yet — verification happens by running the scripts directly against live APIs.
+The `research` plugin has no automated tests yet -- verification happens by running the scripts directly against live APIs. The `workout` plugin's `lib/` has a full pytest suite (`cd plugins/workout && python -m pytest lib/tests -v`).
 
 ## Architecture
 
