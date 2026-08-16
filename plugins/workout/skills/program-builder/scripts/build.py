@@ -24,43 +24,75 @@ import templates as templates_mod  # noqa: E402
 import validation  # noqa: E402
 
 
+MIN_MINUTES = 10  # generator.MINUTES_PER_SLOT -- below this nothing can be built
+MAX_DAYS = 7
+
+
 class BuildError(Exception):
     """A user-facing, actionable failure -- printed as a message, not a traceback."""
 
 
+def _choose_template(all_templates, exercises, level, days, minutes, equipment, constraints):
+    """Walk every qualifying template best-fit-first and return the first one
+    that is actually buildable for this user, as (template, buildability).
+
+    Returns (None, reason) when none is usable -- `reason` describes why the
+    *best* candidate failed, which is the one the user would have expected to
+    get. Trying only the head of the list is how a user whose top template
+    conflicts with a constraint ends up on the generator's identical-every-day
+    fallback when a runner-up template would have fit them fine.
+    """
+    first_reason = None
+    for candidate in templates_mod.rank_candidates(all_templates, level, equipment, days):
+        if not templates_mod.fits_time_budget(candidate, minutes):
+            reason = (
+                f"its sessions run ~{candidate['session_minutes']} min, longer than the "
+                f"~{minutes} min you have"
+            )
+        else:
+            report = generator.template_buildability(candidate, exercises, equipment, constraints)
+            if report["buildable"]:
+                return candidate, report
+            reason = report["reason"]
+        first_reason = first_reason or reason
+    return None, first_reason or (
+        "no curated template matches this level/day count with the equipment you own"
+    )
+
+
 def build(level: str, days: int, minutes: int, equipment: list, constraints: list, block_weeks, conn):
-    """Template match -> buildability check -> generator fallback -> validate -> save.
+    """Template ranking -> buildability check -> generator fallback -> validate -> save.
 
     Returns (program, program_id, notes).
     """
     exercises = exercises_mod.load_exercises()
     all_templates = templates_mod.load_all_templates()
-    match = templates_mod.match_template(all_templates, level, equipment, days)
+    # `outcome` is the buildability report when a template was chosen, and the
+    # reason the best candidate was rejected when none was.
+    match, outcome = _choose_template(
+        all_templates, exercises, level, days, minutes, equipment, constraints)
 
     notes = []
-    buildability = None
     if match is not None:
-        buildability = generator.template_buildability(match, exercises, equipment, constraints)
-
-    if buildability is not None and buildability["buildable"]:
         if block_weeks and block_weeks != match["block_weeks"]:
             match = dict(match, block_weeks=block_weeks)
         program = generator.build_program_from_template(
             match, exercises, equipment_profile=equipment, constraints=constraints,
-            created=dt.date.today().isoformat(), session_minutes=minutes,
+            created=dt.date.today().isoformat(),
         )
         notes.append(f"Used curated template: {match['template_id']}")
-        for pattern in buildability["skipped_patterns"]:
+        if program.meta.session_minutes != minutes:
+            notes.append(
+                f"This template's sessions run ~{program.meta.session_minutes} min, not the "
+                f"~{minutes} min you asked for -- the printed length is the program's real one."
+            )
+        for pattern in outcome["skipped_patterns"]:
             notes.append(
                 f"Dropped the {pattern} slot: nothing you own trains that pattern within your "
                 f"constraints. Run equipment-advisor to see what would unlock it."
             )
     else:
-        if match is None:
-            reason = "no curated template matches this level/day count with the equipment you own"
-        else:
-            reason = buildability["reason"]
-        notes.append(f"No template fit ({reason}); generated a program from the eligible exercise pool.")
+        notes.append(f"No template fit ({outcome}); generated a program from the eligible exercise pool.")
         program = generator.generate_program(
             exercises, equipment_profile=equipment, constraints=constraints, level=level,
             days_per_week=days, session_minutes=minutes, block_weeks=block_weeks or 8,
@@ -101,6 +133,19 @@ def main(argv=None) -> int:
     parser.add_argument("--out", required=True, help="output file path")
     parser.add_argument("--db", metavar="PATH", help="override the SQLite db path (mainly for tests)")
     args = parser.parse_args(argv)
+
+    # Bounds first: --minutes 0 or --days 0 otherwise reaches validate_program
+    # and comes back out as an uncaught ValueError traceback, which is exactly
+    # what BuildError exists to prevent.
+    if args.minutes < MIN_MINUTES:
+        print(f"error: --minutes must be at least {MIN_MINUTES}, got {args.minutes}", file=sys.stderr)
+        return 2
+    if not 1 <= args.days <= MAX_DAYS:
+        print(f"error: --days must be between 1 and {MAX_DAYS}, got {args.days}", file=sys.stderr)
+        return 2
+    if args.block_weeks is not None and args.block_weeks < 1:
+        print(f"error: --block-weeks must be at least 1, got {args.block_weeks}", file=sys.stderr)
+        return 2
 
     try:
         equipment = validation.validate_equipment(validation.split_tokens(args.equipment))

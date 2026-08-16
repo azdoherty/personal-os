@@ -8,7 +8,11 @@ from model import Program, ProgramMeta, Progression, Week, Session, ProgramExerc
 import exercises as exercises_mod
 import progression as progression_mod
 
-PATTERN_ORDER = ("squat", "hinge", "push", "pull", "core", "carry")
+# Deliberately interleaved lower / upper / core: a short session takes the
+# first N of these, so the truncation has to drop the least essential work
+# rather than everything that isn't a leg exercise. Two slots must still be a
+# full-body-ish session (a squat and a push), not two lower-body patterns.
+PATTERN_ORDER = ("squat", "push", "hinge", "pull", "core", "carry")
 DEFAULT_WEEKS_PER_RUNG = 2
 DEFAULT_SETS = 3
 DEFAULT_REPS_LOW = 8
@@ -34,6 +38,33 @@ def _slot_pattern(entry: dict, exercises: list) -> str:
     return exercises_mod.find_by_id(exercises, entry["exercise_id"])["movement_pattern"]
 
 
+def _ignored_equipment_upgrade(pool: list, owned: set, used: set, trained_patterns: set):
+    """The exercise that proves this template wastes the user's equipment.
+
+    A template whose exercises put *none* of the user's gear to work, for a
+    user who owns gear that the eligible pool could use on one of the very
+    patterns the template trains, is the wrong program for them -- it looks
+    legitimate (it is a real curated template) while quietly handing a
+    barbell owner a bodyweight block. Returns the offending upgrade exercise,
+    or None when there is nothing to complain about.
+
+    Deliberately narrow: it fires only when the overlap is *empty*, never
+    when the template merely fails to use every last item. A dumbbell owner
+    who also bought a bench should still get the dumbbell template; a
+    barbell+rack owner should not get the bodyweight one.
+    """
+    if not owned or (owned & used):
+        return None
+    upgrades = [
+        e for e in pool
+        if set(e.get("equipment_required", [])) & owned
+        and e["movement_pattern"] in trained_patterns
+    ]
+    if not upgrades:
+        return None
+    return sorted(upgrades, key=lambda e: e["exercise_id"])[0]
+
+
 def template_buildability(template: dict, exercises: list, equipment_profile, constraints) -> dict:
     """Decide whether a curated template can be built for this user, and how.
 
@@ -51,22 +82,30 @@ def template_buildability(template: dict, exercises: list, equipment_profile, co
       use what they actually own.
     * A session left with zero exercises means the template really doesn't
       fit -- reject it.
+    * Finally, a template that uses **none** of the equipment the user owns,
+      while their eligible pool holds something that would (see
+      `_ignored_equipment_upgrade`), is rejected as well.
 
     Returns {"buildable": bool, "reason": str|None, "skipped_patterns": [...]}.
     """
     equipment = set(equipment_profile)
     excluded = set(constraints)
-    pool_patterns = {
-        e["movement_pattern"]
-        for e in exercises_mod.filter_exercises(exercises, equipment, excluded)
-    }
+    pool = exercises_mod.filter_exercises(exercises, equipment, excluded)
+    pool_patterns = {e["movement_pattern"] for e in pool}
     skipped = []
+    used_equipment = set()
+    trained_patterns = set()
     for session in template["sessions"]:
         kept = 0
         for entry in session["exercises"]:
             if "ladder_group" in entry:
-                if exercises_mod.eligible_ladder(exercises, entry["ladder_group"], equipment, excluded):
+                rungs = exercises_mod.eligible_ladder(
+                    exercises, entry["ladder_group"], equipment, excluded)
+                if rungs:
                     kept += 1
+                    trained_patterns.add(rungs[0]["movement_pattern"])
+                    for rung in rungs:
+                        used_equipment.update(rung.get("equipment_required", []))
                 else:
                     pattern = _slot_pattern(entry, exercises)
                     if pattern in pool_patterns:
@@ -92,29 +131,26 @@ def template_buildability(template: dict, exercises: list, equipment_profile, co
                         "skipped_patterns": [],
                     }
                 kept += 1
+                trained_patterns.add(ex["movement_pattern"])
+                used_equipment.update(ex.get("equipment_required", []))
         if kept == 0:
             return {
                 "buildable": False,
                 "reason": f"day {session['day']} would have no exercises left",
                 "skipped_patterns": skipped,
             }
+
+    upgrade = _ignored_equipment_upgrade(pool, equipment, used_equipment, trained_patterns)
+    if upgrade is not None:
+        return {
+            "buildable": False,
+            "reason": (
+                f"it uses none of the equipment you own, while your "
+                f"{upgrade['name']} would train the same {upgrade['movement_pattern']} slot"
+            ),
+            "skipped_patterns": [],
+        }
     return {"buildable": True, "reason": None, "skipped_patterns": skipped}
-
-
-def template_is_constraint_compatible(template: dict, exercises: list, excluded_constraints,
-                                       equipment_profile=None) -> bool:
-    """Boolean view of `template_buildability`. `equipment_profile=None`
-    means "don't check equipment", i.e. constraint compatibility only."""
-    if equipment_profile is None:
-        equipment_profile = _all_equipment_ids(exercises)
-    return template_buildability(template, exercises, equipment_profile, excluded_constraints)["buildable"]
-
-
-def _all_equipment_ids(exercises: list) -> set:
-    ids = set()
-    for e in exercises:
-        ids.update(e.get("equipment_required", []))
-    return ids
 
 
 def _build_ladder_exercise(entry: dict, exercises: list, block_weeks: int,
@@ -177,13 +213,19 @@ def _build_loaded_exercise(entry: dict, exercises: list, block_weeks: int, model
 
 
 def build_program_from_template(template: dict, exercises: list, equipment_profile: list,
-                                 constraints: list, created: str, session_minutes=None) -> Program:
+                                 constraints: list, created: str) -> Program:
     """Build a curated template into a concrete Program.
 
     Ladder slots are filtered to the rungs this user can actually do; a slot
     with no eligible rung is dropped (see `template_buildability`, which
-    decides up front whether dropping it is acceptable). `session_minutes`
-    overrides the template's own value when the caller supplies one.
+    decides up front whether dropping it is acceptable).
+
+    `meta.session_minutes` is the template's own value and there is no
+    caller override: the sets, reps and rest here are fixed content, so
+    stamping a requested length onto them would print a number the program
+    does not actually take. Callers who need a specific session length
+    should screen candidates with `templates.fits_time_budget` and fall
+    through to `generate_program`, which really does size sessions.
     """
     block_weeks = template["block_weeks"]
     model_name = template["progression_model"]
@@ -212,7 +254,7 @@ def build_program_from_template(template: dict, exercises: list, equipment_profi
 
     meta = ProgramMeta(
         level=template["level"], goal=template["goal"], days_per_week=template["days_per_week"],
-        session_minutes=session_minutes or template["session_minutes"],
+        session_minutes=template["session_minutes"],
         equipment_profile=list(equipment_profile),
         constraints=list(constraints), created=created, source=template["template_id"],
     )

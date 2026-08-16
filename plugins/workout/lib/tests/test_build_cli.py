@@ -76,11 +76,94 @@ def test_zero_equipment_user_gets_the_bodyweight_template_not_the_generator(conn
     _renders(program)
 
 
-def test_requested_minutes_reach_the_saved_program_on_the_template_path(conn):
-    # The dumbbell template's own session_minutes is 40; the user asked for 55.
-    program, program_id, _ = build_mod.build("beginner", 3, 55, ["dumbbell"], [], 4, conn)
-    assert program.meta.session_minutes == 55
-    assert store.get_program(conn, program_id).meta.session_minutes == 55
+@pytest.mark.parametrize("owned", [
+    ["barbell", "rack"],
+    ["bench", "sled"],
+    ["sled", "weighted_vest"],
+    ["dumbbell"],
+    ["dumbbell", "bench"],
+])
+def test_a_user_who_owns_equipment_gets_a_program_that_actually_uses_it(conn, owned):
+    # The invariant that matters to the person holding the printout: gear they
+    # own shows up in the program. A curated template that ignores all of it
+    # (the bodyweight block for a barbell owner) is not an acceptable answer,
+    # however legitimate it looks.
+    program, _, _ = build_mod.build("beginner", 3, 40, owned, [], 4, conn)
+    db = {e["exercise_id"]: e for e in build_mod.exercises_mod.load_exercises()}
+    used = {
+        item
+        for w in program.weeks for s in w.sessions for ex in s.exercises
+        for item in db[ex.exercise_id]["equipment_required"]
+    }
+    assert used & set(owned), (
+        f"{program.meta.source} put none of {owned} to work; used {sorted(used) or 'nothing'}"
+    )
+
+
+def test_a_runner_up_template_is_tried_when_the_best_one_is_unbuildable(conn):
+    # A dumbbell owner with a grip constraint can't do a single lift in the
+    # dumbbell template, but the bodyweight template fits them completely --
+    # and beats the generator's identical-every-day fallback.
+    program, _, notes = build_mod.build("beginner", 3, 30, ["dumbbell"], ["grip"], 4, conn)
+    assert notes[0] == "Used curated template: bodyweight_beginner_3day"
+    assert program.meta.source == "bodyweight_beginner_3day"
+    assert model.validate_program(program) == []
+
+
+@pytest.mark.parametrize("minutes", [20, 40, 55])
+def test_the_printed_session_length_is_never_contradicted_by_the_content(conn, minutes):
+    # Whatever produced the content owns the printed number: a template keeps
+    # its own length (and says so when it differs from the request), and the
+    # generator, which really does size sessions, keeps the requested one.
+    import generator
+    import templates as templates_mod
+
+    program, _, notes = build_mod.build("beginner", 3, minutes, ["dumbbell"], [], 4, conn)
+    if program.meta.source == "generated":
+        assert program.meta.session_minutes == minutes
+        slots = generator.slots_per_session(minutes)
+        assert all(
+            len(s.exercises) <= slots for w in program.weeks for s in w.sessions
+        )
+    else:
+        template = next(
+            t for t in templates_mod.load_all_templates()
+            if t["template_id"] == program.meta.source
+        )
+        assert program.meta.session_minutes == template["session_minutes"]
+        assert (program.meta.session_minutes == minutes) or any(
+            "not the" in n and "you asked for" in n for n in notes
+        )
+
+
+def test_a_template_longer_than_the_users_time_budget_is_not_used(conn):
+    # The dumbbell template is a 40-minute session. Handing it to someone with
+    # 20 minutes -- relabelled or not -- is not a fit.
+    program, _, notes = build_mod.build("beginner", 3, 20, ["dumbbell"], [], 4, conn)
+    assert program.meta.source == "generated"
+    assert "longer than the ~20 min you have" in notes[0]
+    assert program.meta.session_minutes == 20
+
+
+def test_template_carry_reps_are_trips_not_bare_numbers(conn):
+    program, _, _ = build_mod.build("beginner", 3, 40, ["dumbbell"], [], 4, conn)
+    carry = next(
+        ex for w in program.weeks for s in w.sessions for ex in s.exercises
+        if ex.exercise_id == "db_farmer_carry"
+    )
+    assert carry.reps == "2 trips"
+    assert "4 trips" in carry.load.progression_rule
+
+
+@pytest.mark.parametrize("flag,value", [("--minutes", "0"), ("--days", "0"), ("--days", "9")])
+def test_cli_rejects_out_of_range_numbers_instead_of_raising(tmp_path, capsys, flag, value):
+    argv = ["--level", "beginner", "--days", "3", "--minutes", "30",
+            "--out", str(tmp_path / "p.md"), "--db", ":memory:"]
+    argv[argv.index(flag) + 1] = value
+    code = build_mod.main(argv)
+    assert code == 2
+    assert "error:" in capsys.readouterr().err
+    assert not (tmp_path / "p.md").exists()
 
 
 def test_generator_fallback_branch_explains_itself(conn):

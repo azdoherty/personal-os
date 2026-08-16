@@ -44,12 +44,20 @@ renders a printable output.
        --block-weeks 8 --format markdown --out program.md
    ```
    The script prints which curated template it used, or explains why it fell
-   back to generating one (missing equipment, or the closest template
-   conflicts with the stated constraints) -- relay that explanation to the
-   user so they understand where their program came from. It also prints any
-   movement-pattern slot that had to be dropped for lack of eligible
-   exercises, and the saved `program_id` (`Saved as prog_...`), which is how
-   the program is looked up again in the local store.
+   back to generating one (missing equipment, the closest template conflicts
+   with the stated constraints, its sessions are longer than the time the
+   user has, or it would put none of the user's equipment to work) -- relay
+   that explanation to the user so they understand where their program came
+   from. Every qualifying template is tried in order, so a rejected top pick
+   falls through to the next curated template before the generator. It also
+   prints any movement-pattern slot that had to be dropped for lack of
+   eligible exercises, and the saved `program_id` (`Saved as prog_...`),
+   which is how the program is looked up again in the local store.
+
+   `--minutes` sizes a *generated* session. A curated template is fixed
+   content, so it keeps its own session length and the script says so when
+   that differs from the request -- the printed "~N min" is always the
+   program's real length, never a relabelled one.
 
    Unknown constraint flags or equipment ids exit non-zero with the legal set
    printed -- fix the token and re-run rather than dropping it, or the
