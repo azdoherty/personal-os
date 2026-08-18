@@ -83,3 +83,9 @@ renders a printable output.
 - Every generated program is grounded in `references/sources.md` -- if the
   user asks "why is it built this way," look up the relevant `informs` tag
   there.
+- A short `--minutes` request (roughly under the curated templates' own
+  session length) routes even a zero-equipment user to the generator instead
+  of the bodyweight template. The generated fallback still progresses each
+  slot through its full variation ladder week to week -- it isn't a static
+  program -- but it loses the template's day-to-day pattern rotation. Mention
+  this if a "start from nothing" user asks for a notably short session.

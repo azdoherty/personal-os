@@ -107,3 +107,36 @@ def test_real_exercise_db_loads_and_has_expected_shape():
     assert "weighted_vest_split_squat" in ids
     for e in real:
         assert e["movement_pattern"] in {"squat", "hinge", "push", "pull", "carry", "core"}
+
+
+def test_every_ladder_group_is_equipment_and_pattern_uniform_across_rungs():
+    """generator.py credits a ladder slot with the union of every eligible
+    rung's equipment/pattern, but progression only ever reaches ONE rung per
+    week. That's only safe if every rung in a group shares the same
+    equipment_required/constraint_flags/movement_pattern. If this ever fails,
+    the per-pattern equipment guard (lib/generator.py) needs to be reworked
+    to credit only the reachable rung, not the whole group -- see the
+    round-3/round-4 review history on template equipment matching.
+    """
+    real = ex_mod.load_exercises()
+    ladder_groups = {}
+    for e in real:
+        group = e.get("ladder_group")
+        if group:
+            ladder_groups.setdefault(group, []).append(e)
+
+    for group_name, rungs in ladder_groups.items():
+        equipment_sets = {tuple(sorted(r.get("equipment_required", []))) for r in rungs}
+        constraint_sets = {tuple(sorted(r.get("constraint_flags", []))) for r in rungs}
+        patterns = {r["movement_pattern"] for r in rungs}
+        assert len(equipment_sets) == 1, (
+            f"ladder group {group_name!r} has rungs requiring different equipment: "
+            f"{equipment_sets}"
+        )
+        assert len(constraint_sets) == 1, (
+            f"ladder group {group_name!r} has rungs with different constraint_flags: "
+            f"{constraint_sets}"
+        )
+        assert len(patterns) == 1, (
+            f"ladder group {group_name!r} spans multiple movement patterns: {patterns}"
+        )
