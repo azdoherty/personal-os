@@ -104,7 +104,7 @@ def test_grade_produces_full_record():
     assert out["what_would_change_this"]
 
 
-def test_main_sorts_list_by_priority(tmp_path):
+def test_main_sorts_list_by_priority():
     claims = [
         {"claim": "weak", "outcome_type": "mechanism-only", "best_study_tier": "in-vitro",
          "population_match": "none", "consistency": "mixed", "n_studies": 0,
@@ -120,3 +120,44 @@ def test_main_sorts_list_by_priority(tmp_path):
     assert res.returncode == 0
     parsed = json.loads(res.stdout)
     assert parsed[0]["claim"] == "strong"   # highest priority first
+
+
+def test_avoid_item_never_outranks_actionable():
+    claims = [
+        {"claim": "refuted-but-cheap", "outcome_type": "clinical-outcome",
+         "best_study_tier": "rct", "population_match": "direct", "consistency": "contradicted",
+         "n_studies": 3, "absence_reason": "tested-and-refuted", "risk": "low",
+         "cost_per_month": 10, "reversibility": "immediate", "community_frequency": "none"},
+        {"claim": "worth-a-shot", "outcome_type": "mechanism-only", "best_study_tier": "in-vitro",
+         "population_match": "distant", "consistency": "mixed", "n_studies": 0,
+         "absence_reason": "untested-low-commercial-incentive", "risk": "low",
+         "cost_per_month": 12, "reversibility": "immediate", "community_frequency": "low"},
+    ]
+    res = subprocess.run([sys.executable, SCRIPT], input=json.dumps(claims),
+                         capture_output=True, text=True)
+    assert res.returncode == 0
+    parsed = json.loads(res.stdout)
+    assert parsed[0]["claim"] == "worth-a-shot"
+    assert parsed[1]["verdict_quadrant"] == "avoid"
+
+
+def test_grade_end_to_end_quadrants():
+    collagen = {"claim": "collagen+C improves tendon healing", "outcome_type": "clinical-outcome",
+                "best_study_tier": "rct", "population_match": "direct", "consistency": "consistent",
+                "n_studies": 3, "absence_reason": None, "risk": "low", "cost_per_month": 20,
+                "reversibility": "immediate", "community_frequency": "moderate"}
+    assert grade(collagen)["verdict_quadrant"] == "well-supported"
+
+    moringa = {"claim": "moringa builds tendons", "outcome_type": "mechanism-only",
+               "best_study_tier": "none", "population_match": "none", "consistency": "mixed",
+               "n_studies": 0, "absence_reason": "untested-implausible", "risk": "low",
+               "cost_per_month": 10, "reversibility": "immediate", "community_frequency": "moderate"}
+    assert grade(moringa)["verdict_quadrant"] == "marketing-claim"
+
+    bpc = {"claim": "BPC-157 heals tendons", "outcome_type": "mechanism-only",
+           "best_study_tier": "animal", "population_match": "none", "consistency": "mixed",
+           "n_studies": 0, "absence_reason": "too-new", "risk": "high", "cost_per_month": 60,
+           "reversibility": "slow", "community_frequency": "high"}
+    g = grade(bpc)
+    assert g["verdict_quadrant"] == "avoid"
+    assert g["hype_risk"] is True

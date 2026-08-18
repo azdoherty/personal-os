@@ -61,6 +61,8 @@ Pass a JSON array to grade many at once (output is sorted by priority). Field va
 - `absence_reason` (required when evidence is thin): `tested-and-refuted` | `untested-low-commercial-incentive` | `untested-implausible` | `too-new`
 - `risk`: `low` | `moderate` | `high`; `reversibility`: `immediate` | `slow` | `permanent`
 - `community_frequency`: `high` | `moderate` | `low` | `none`
+- `cost_per_month`: approximate USD/month — feeds the risk/cost axis (>50 marks an item costly)
+- `n_studies`: integer count of supporting human studies (0 floors evidence to 1)
 
 **Never guess an input.** If a field is unknown, search for it or mark it honestly
 (`best_study_tier: none`, `absence_reason: too-new`). Feeding a rigor tool an assumption is

@@ -117,11 +117,21 @@ def grade(claim):
     }
 
 
+_QUADRANT_RANK = {
+    "well-supported": 0,
+    "worth-trying-anyway": 1,
+    "unproven-and-costly": 2,
+    "marketing-claim": 3,
+    "avoid": 4,
+}
+
+
 def main():
-    data = json.load(sys.stdin)
+    raw = sys.stdin.buffer.read().decode("utf-8")
+    data = json.loads(raw)
     claims = data if isinstance(data, list) else [data]
     graded = [grade(c) for c in claims]
-    graded.sort(key=lambda g: g["priority_score"], reverse=True)
+    graded.sort(key=lambda g: (_QUADRANT_RANK[g["verdict_quadrant"]], -g["priority_score"]))
     out = graded if isinstance(data, list) else graded[0]
     print(json.dumps(out, ensure_ascii=True, indent=2))
 
