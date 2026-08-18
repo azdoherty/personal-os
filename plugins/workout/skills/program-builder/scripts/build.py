@@ -24,7 +24,9 @@ import templates as templates_mod  # noqa: E402
 import validation  # noqa: E402
 
 
-MIN_MINUTES = 10  # generator.MINUTES_PER_SLOT -- below this nothing can be built
+# Referenced, not copied: below one slot's worth of minutes nothing can be
+# built, and a duplicated literal here would silently drift from the generator.
+MIN_MINUTES = generator.MINUTES_PER_SLOT
 MAX_DAYS = 7
 
 
