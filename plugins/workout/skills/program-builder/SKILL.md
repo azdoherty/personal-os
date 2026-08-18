@@ -46,7 +46,8 @@ renders a printable output.
    The script prints which curated template it used, or explains why it fell
    back to generating one (missing equipment, the closest template conflicts
    with the stated constraints, its sessions are longer than the time the
-   user has, or it would put none of the user's equipment to work) -- relay
+   user has, or it would train some movement pattern without putting any of
+   the user's equipment to work when something they own could) -- relay
    that explanation to the user so they understand where their program came
    from. Every qualifying template is tried in order, so a rejected top pick
    falls through to the next curated template before the generator. It also

@@ -5,12 +5,15 @@ path -- template match -> buildability -> generator fallback -> validate ->
 save -> render -- against an in-memory database.
 """
 import importlib.util
+import itertools
 import sqlite3
 import sys
 from pathlib import Path
 
 import pytest
 
+import advisor
+import exercises as exercises_mod
 import model
 import render
 import store
@@ -97,6 +100,98 @@ def test_a_user_who_owns_equipment_gets_a_program_that_actually_uses_it(conn, ow
     }
     assert used & set(owned), (
         f"{program.meta.source} put none of {owned} to work; used {sorted(used) or 'nothing'}"
+    )
+
+
+def _equipment_used_by_pattern(program, db) -> dict:
+    """pattern -> the equipment the program's own exercises for that pattern
+    require. Read off the finished program, so it says nothing about which
+    branch produced it."""
+    used: dict = {}
+    for week in program.weeks:
+        for session in week.sessions:
+            for ex in session.exercises:
+                used.setdefault(ex.movement_pattern, set()).update(
+                    db[ex.exercise_id]["equipment_required"])
+    return used
+
+
+def _ignored_gear(program, owned, exercises, db) -> list:
+    """Every (pattern, upgrade_id) where the program trains a pattern without
+    touching any owned equipment while the user's eligible pool holds a
+    same-pattern exercise that would have used some. Empty list == the user's
+    gear is not being wasted."""
+    owned = set(owned)
+    pool = exercises_mod.filter_exercises(exercises, owned, set())
+    findings = []
+    for pattern, used in sorted(_equipment_used_by_pattern(program, db).items()):
+        if used & owned:
+            continue
+        upgrades = sorted(
+            e["exercise_id"] for e in pool
+            if e["movement_pattern"] == pattern and set(e["equipment_required"]) & owned
+        )
+        if upgrades:
+            findings.append((pattern, upgrades[0]))
+    return findings
+
+
+def test_no_equipment_subset_gets_a_program_that_ignores_the_gear_it_owns(conn):
+    """Exhaustive, not hand-picked. Three consecutive review rounds found a
+    real bug in template-selection-vs-owned-equipment, and all three times the
+    suite missed it because the example equipment sets happened not to contain
+    the breaking combination. Round 3's was `barbell + rack + sturdy_table`:
+    the $0 table alone satisfied a whole-template overlap check and let the
+    barbell go unused. So: every non-empty subset of the real catalog, every
+    time.
+
+    The invariant is per pattern, not global -- owning a rack with no barbell
+    is not the program's fault, because nothing in the eligible pool can use
+    it. Only a pattern where a usable upgrade *exists* and is passed over
+    counts as ignoring the user's gear.
+    """
+    catalog = [e["equipment_id"] for e in advisor.load_equipment_catalog()]
+    exercises = exercises_mod.load_exercises()
+    db = {e["exercise_id"]: e for e in exercises}
+    subsets = [
+        list(combo)
+        for size in range(1, len(catalog) + 1)
+        for combo in itertools.combinations(catalog, size)
+    ]
+    assert len(subsets) == 2 ** len(catalog) - 1
+
+    failures = []
+    for owned in subsets:
+        program, _, _ = build_mod.build("beginner", 3, 40, owned, [], 8, conn)
+        ignored = _ignored_gear(program, owned, exercises, db)
+        if ignored:
+            failures.append((owned, program.meta.source, ignored))
+    assert not failures, "\n".join(
+        f"owns {owned} -> {source} ignores it on: "
+        + ", ".join(f"{p} (could have used {up})" for p, up in ignored)
+        for owned, source, ignored in failures[:10]
+    )
+
+
+@pytest.mark.parametrize("owned,pattern,upgrade_needs", [
+    # Round 3's reproduction, named explicitly so the specific bug is
+    # readable and not just an aggregate pass/fail in the sweep above.
+    # `sturdy_table` is a $0 catalog item most households already own; the
+    # bodyweight template's pull slot uses one, which used to be enough to
+    # satisfy a whole-template "uses some owned gear" check and hand a
+    # barbell owner box squats for eight weeks.
+    (["barbell", "rack", "sturdy_table"], "squat", {"barbell", "rack"}),
+    (["sled", "sturdy_table"], "squat", {"sled"}),
+])
+def test_one_incidental_item_does_not_excuse_ignoring_the_rest_of_the_gear(
+    conn, owned, pattern, upgrade_needs
+):
+    program, _, _ = build_mod.build("beginner", 3, 40, owned, [], 8, conn)
+    db = {e["exercise_id"]: e for e in build_mod.exercises_mod.load_exercises()}
+    used = _equipment_used_by_pattern(program, db).get(pattern, set())
+    assert used & upgrade_needs, (
+        f"{program.meta.source} trains {pattern} with {sorted(used) or 'nothing'} while the "
+        f"user owns {owned}; the table alone is not gear being 'put to work'"
     )
 
 

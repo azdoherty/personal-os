@@ -38,31 +38,45 @@ def _slot_pattern(entry: dict, exercises: list) -> str:
     return exercises_mod.find_by_id(exercises, entry["exercise_id"])["movement_pattern"]
 
 
-def _ignored_equipment_upgrade(pool: list, owned: set, used: set, trained_patterns: set):
-    """The exercise that proves this template wastes the user's equipment.
+def _ignored_equipment_upgrade(pool: list, owned: set, used_by_pattern: dict):
+    """The movement pattern where this template wastes the user's equipment,
+    and the exercise that proves it -- or None when there is nothing to
+    complain about.
 
-    A template whose exercises put *none* of the user's gear to work, for a
-    user who owns gear that the eligible pool could use on one of the very
-    patterns the template trains, is the wrong program for them -- it looks
-    legitimate (it is a real curated template) while quietly handing a
-    barbell owner a bodyweight block. Returns the offending upgrade exercise,
-    or None when there is nothing to complain about.
+    The check is **per movement pattern**, not across the template as a
+    whole. A whole-template overlap test is trivially satisfied by one
+    incidental item: the bodyweight template's pull slot uses a
+    `sturdy_table`, which the equipment catalog itself notes most households
+    already own. A barbell + rack + table owner therefore passes a global
+    "does it use any of your gear" test on the strength of the table alone,
+    while every squat, push and hinge in their block stays bodyweight -- the
+    exact regression this guard exists to prevent, just one item further in.
 
-    Deliberately narrow: it fires only when the overlap is *empty*, never
-    when the template merely fails to use every last item. A dumbbell owner
-    who also bought a bench should still get the dumbbell template; a
-    barbell+rack owner should not get the bodyweight one.
+    So: for each pattern the template actually trains, if none of that
+    pattern's exercises (a fixed slot's exercise, or every eligible rung of a
+    ladder slot) use any owned equipment, *and* the user's eligible pool holds
+    a same-pattern exercise that would, the template is the wrong program for
+    them. Returns `(pattern, upgrade_exercise)`.
+
+    Still deliberately narrow in the other direction: a pattern that already
+    puts some owned gear to work is never faulted for not using all of it, and
+    a pattern with no owned-equipment alternative in the pool is not the
+    template's fault. A dumbbell owner who also bought a bench still gets the
+    dumbbell template, whose every pattern uses the dumbbell.
     """
-    if not owned or (owned & used):
+    if not owned:
         return None
-    upgrades = [
-        e for e in pool
-        if set(e.get("equipment_required", [])) & owned
-        and e["movement_pattern"] in trained_patterns
-    ]
-    if not upgrades:
-        return None
-    return sorted(upgrades, key=lambda e: e["exercise_id"])[0]
+    for pattern in sorted(used_by_pattern):
+        if used_by_pattern[pattern] & owned:
+            continue
+        upgrades = [
+            e for e in pool
+            if e["movement_pattern"] == pattern
+            and set(e.get("equipment_required", [])) & owned
+        ]
+        if upgrades:
+            return pattern, sorted(upgrades, key=lambda e: e["exercise_id"])[0]
+    return None
 
 
 def template_buildability(template: dict, exercises: list, equipment_profile, constraints) -> dict:
@@ -82,9 +96,11 @@ def template_buildability(template: dict, exercises: list, equipment_profile, co
       use what they actually own.
     * A session left with zero exercises means the template really doesn't
       fit -- reject it.
-    * Finally, a template that uses **none** of the equipment the user owns,
-      while their eligible pool holds something that would (see
-      `_ignored_equipment_upgrade`), is rejected as well.
+    * Finally, a template that trains some pattern using **none** of the
+      equipment the user owns, while their eligible pool holds a same-pattern
+      exercise that would (see `_ignored_equipment_upgrade`), is rejected as
+      well. Checked per pattern, so one incidental item does not excuse the
+      rest of the template.
 
     Returns {"buildable": bool, "reason": str|None, "skipped_patterns": [...]}.
     """
@@ -93,8 +109,9 @@ def template_buildability(template: dict, exercises: list, equipment_profile, co
     pool = exercises_mod.filter_exercises(exercises, equipment, excluded)
     pool_patterns = {e["movement_pattern"] for e in pool}
     skipped = []
-    used_equipment = set()
-    trained_patterns = set()
+    # pattern -> the equipment every slot training that pattern would use.
+    # Per-pattern, not one global union: see `_ignored_equipment_upgrade`.
+    used_by_pattern: dict = {}
     for session in template["sessions"]:
         kept = 0
         for entry in session["exercises"]:
@@ -103,9 +120,9 @@ def template_buildability(template: dict, exercises: list, equipment_profile, co
                     exercises, entry["ladder_group"], equipment, excluded)
                 if rungs:
                     kept += 1
-                    trained_patterns.add(rungs[0]["movement_pattern"])
+                    slot_used = used_by_pattern.setdefault(rungs[0]["movement_pattern"], set())
                     for rung in rungs:
-                        used_equipment.update(rung.get("equipment_required", []))
+                        slot_used.update(rung.get("equipment_required", []))
                 else:
                     pattern = _slot_pattern(entry, exercises)
                     if pattern in pool_patterns:
@@ -131,8 +148,8 @@ def template_buildability(template: dict, exercises: list, equipment_profile, co
                         "skipped_patterns": [],
                     }
                 kept += 1
-                trained_patterns.add(ex["movement_pattern"])
-                used_equipment.update(ex.get("equipment_required", []))
+                used_by_pattern.setdefault(ex["movement_pattern"], set()).update(
+                    ex.get("equipment_required", []))
         if kept == 0:
             return {
                 "buildable": False,
@@ -140,13 +157,14 @@ def template_buildability(template: dict, exercises: list, equipment_profile, co
                 "skipped_patterns": skipped,
             }
 
-    upgrade = _ignored_equipment_upgrade(pool, equipment, used_equipment, trained_patterns)
-    if upgrade is not None:
+    ignored = _ignored_equipment_upgrade(pool, equipment, used_by_pattern)
+    if ignored is not None:
+        pattern, upgrade = ignored
         return {
             "buildable": False,
             "reason": (
-                f"it uses none of the equipment you own, while your "
-                f"{upgrade['name']} would train the same {upgrade['movement_pattern']} slot"
+                f"its {pattern} work uses none of the equipment you own, while your "
+                f"{upgrade['name']} would train the same {pattern} slot"
             ),
             "skipped_patterns": [],
         }
