@@ -81,10 +81,23 @@ def build(level: str, days: int, minutes: int, equipment: list, constraints: lis
             created=dt.date.today().isoformat(),
         )
         notes = [f"Built a {', '.join(focus)} split routine."]
-        if not any(s.exercises for w in program.weeks for s in w.sessions):
+        if len(focus) > days:
+            notes.append(
+                f"Only the first {days} focus(es) fit into --days {days}: "
+                f"{', '.join(focus[:days])}. Dropped: {', '.join(focus[days:])}. "
+                "Raise --days to train all of them."
+            )
+        # ANY empty session is fatal, not just an all-empty program:
+        # validate_program errors on a single empty session, and a bare
+        # ValueError from there escapes main()'s BuildError handler as a raw
+        # traceback. A per-focus split makes this reachable with ordinary
+        # input -- e.g. `--focus core,arms --constraints arm-load`, where the
+        # arm day has nothing eligible while the core day is fine.
+        empty = sorted({s.label for w in program.weeks for s in w.sessions if not s.exercises})
+        if empty:
             raise BuildError(
-                "No eligible exercises found for your equipment/constraints in this split. "
-                "Loosen a constraint, or run equipment-advisor to see what to buy."
+                f"No eligible exercises for your equipment/constraints in: {', '.join(empty)}. "
+                "Drop that focus, loosen a constraint, or run equipment-advisor to see what to buy."
             )
         errors = model.validate_program(program)
         if errors:

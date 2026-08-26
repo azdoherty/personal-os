@@ -355,6 +355,11 @@ def test_cli_rejects_a_typod_focus_instead_of_ignoring_it(tmp_path, capsys):
     assert not out.exists()
 
 
+CORE_EXERCISE_NAMES = (
+    "Dead Bug", "Bird Dog", "Curl-Up", "Knee Tuck Hold", "Plank", "Bicycle Crunch", "Side Plank",
+)
+
+
 def test_cli_focus_mode_end_to_end(tmp_path, capsys):
     out = tmp_path / "program.md"
     code = build_mod.main([
@@ -363,6 +368,59 @@ def test_cli_focus_mode_end_to_end(tmp_path, capsys):
     ])
     assert code == 0
     text = out.read_text(encoding="utf-8")
-    assert "Session length: ~20 min" in text or "~20 min" in text
+    assert "**Session length:** ~20 min" in text
+    # Focus-specific, not just "the requested minutes appear somewhere": the
+    # full-body path would satisfy a bare minutes check identically. These
+    # three assertions all fail if --focus is wired to generate_program.
+    assert "Day 1 — Core" in text
+    assert "generated-focus" in text
+    named = [n for n in CORE_EXERCISE_NAMES if n in text]
+    assert len(named) >= 2, f"expected several distinct core exercises, found {named}"
     stdout = capsys.readouterr().out
     assert "Saved as prog_" in stdout
+
+
+def test_a_partially_empty_split_is_an_actionable_error_not_a_traceback(conn):
+    # "arms" trains push/pull, and every push/pull exercise in the DB carries
+    # the arm-load flag -- so the arm day comes out empty while the core day
+    # is fine. The old guard only fired when EVERY session was empty, so this
+    # fell through to a bare ValueError and out of main() as a raw traceback.
+    with pytest.raises(build_mod.BuildError) as exc:
+        build_mod.build("beginner", 2, 30, [], ["arm-load"], 4, conn, focus=["core", "arms"])
+    message = str(exc.value)
+    assert "Arms" in message
+    assert "Core" not in message
+    assert "equipment-advisor" in message
+
+
+def test_cli_partially_empty_split_exits_cleanly(tmp_path, capsys):
+    out = tmp_path / "program.md"
+    code = build_mod.main([
+        "--level", "beginner", "--days", "2", "--minutes", "30",
+        "--focus", "core,arms", "--constraints", "arm-load",
+        "--out", str(out), "--db", ":memory:",
+    ])
+    assert code == 2
+    err = capsys.readouterr().err
+    assert "error:" in err and "Arms" in err
+    assert "Traceback" not in err
+    assert not out.exists()
+
+
+def test_focus_mode_says_so_when_more_focuses_were_asked_for_than_days(conn):
+    _, _, notes = build_mod.build(
+        "beginner", 2, 30, [], [], 2, conn, focus=["core", "legs", "arms"]
+    )
+    truncation = next(n for n in notes if "Dropped:" in n)
+    assert "arms" in truncation
+
+
+def test_a_duplicated_focus_token_is_deduped_not_printed_twice(tmp_path, capsys):
+    out = tmp_path / "program.md"
+    code = build_mod.main([
+        "--level", "beginner", "--days", "2", "--minutes", "30",
+        "--focus", "core,core", "--out", str(out), "--db", ":memory:",
+    ])
+    assert code == 0
+    assert "split: core, core" not in out.read_text(encoding="utf-8")
+    capsys.readouterr()
