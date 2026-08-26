@@ -373,20 +373,64 @@ def test_focus_program_core_session_has_more_than_one_exercise():
         level="beginner", days_per_week=3, session_minutes=30, block_weeks=4, created="2026-08-25",
     )
     session = program.weeks[0].sessions[0]
-    assert len(session.exercises) > 1
     ids = {ex.exercise_id for ex in session.exercises}
-    assert ids <= {"dead_bug", "bird_dog", "curl_up", "knee_tuck_hold"}
+    # 30 min -> 4 slots, and core has exactly 4 sub-category buckets here, so
+    # the fully-specified answer is all four. A subset check would let a
+    # regression that caps focus sessions at 2 exercises pass unnoticed.
+    assert ids == {"dead_bug", "bird_dog", "curl_up", "knee_tuck_hold"}
     assert model.validate_program(program) == []
+
+
+def test_focus_slot_count_is_capped_by_the_buckets_actually_available():
+    # Asserted on `_focus_slot_count` itself, NOT through
+    # generate_focus_program: its caller slices `ordered_keys[:slot_count]`,
+    # and slicing silently caps at the list's length, so a pipeline-level
+    # test passes whether this cap exists, is broken, or is deleted.
+    # 60 min alone wants 8 slots; with one bucket available the answer is 1.
+    assert gen_mod._focus_slot_count(1, 60) == 1
+    assert gen_mod._focus_slot_count(2, 60) == 2
+    # The floor of 2 still applies when buckets are plentiful.
+    assert gen_mod._focus_slot_count(6, 1) == 2
+    # And the minutes-derived count wins when it is the smaller of the two.
+    assert gen_mod._focus_slot_count(6, 30) == 4
 
 
 def test_focus_program_short_session_still_caps_at_available_sub_categories():
     # 1 minute -> max(2, 0) = 2 wanted, but "legs" here only has squat+hinge
     # eligible (2 buckets) -- this must not somehow invent a 3rd exercise.
+    assert gen_mod._focus_slot_count(2, 1) == 2
     program = gen_mod.generate_focus_program(
         FOCUS_EXERCISES, focus_list=["legs"], equipment_profile=[], constraints=[],
         level="beginner", days_per_week=1, session_minutes=1, block_weeks=1, created="2026-08-25",
     )
     assert len(program.weeks[0].sessions[0].exercises) == 2
+
+
+def test_focus_program_leg_day_never_drops_the_squat_before_the_carry():
+    # All three "legs" buckets are pattern-fallbacks (no leg exercise carries
+    # a sub_category), so their internal order is PATTERN_ORDER's, not
+    # alphabetical: alphabetical made a short leg day open with a loaded
+    # carry and drop the squat entirely.
+    exercises = exercises_mod.load_exercises()
+    two_slots = gen_mod._pick_focus_exercises(
+        exercises, "legs", ["dumbbell"], [], session_minutes=20)
+    assert [e["exercise_id"] for e in two_slots] == ["db_goblet_squat", "db_romanian_deadlift"]
+
+    one_slot = gen_mod._pick_focus_exercises(
+        exercises, "legs", ["dumbbell"], [], session_minutes=20)[:1]
+    assert one_slot[0]["movement_pattern"] == "squat"
+
+    # And the carry is still reachable once the session is long enough.
+    full = gen_mod._pick_focus_exercises(
+        exercises, "legs", ["dumbbell"], [], session_minutes=60)
+    assert [e["movement_pattern"] for e in full] == ["squat", "hinge", "carry"]
+
+
+def test_focus_vocabulary_has_a_single_effective_source_of_truth():
+    # validate_focus checks against model.FOCUS_AREAS while the generator
+    # indexes generator.FOCUS_PATTERNS -- a token in one but not the other
+    # is a KeyError instead of a clean "unknown focus area" error.
+    assert set(model.FOCUS_AREAS) == set(gen_mod.FOCUS_PATTERNS)
 
 
 def test_focus_program_prefers_named_sub_categories_before_generic_pattern_fallback():
@@ -412,12 +456,29 @@ def test_focus_program_cycles_multiple_focuses_across_days():
 
 
 def test_focus_program_zero_equipment_arms_is_triceps_only():
+    # 30 min asks for 4 slots; this fixture leaves exactly 1 eligible bucket
+    # for a zero-equipment arm day, and the slot count must say 1, not 4 --
+    # asserted on the function, since the caller's slice hides the difference.
+    assert gen_mod._focus_slot_count(1, 30) == 1
     program = gen_mod.generate_focus_program(
         FOCUS_EXERCISES, focus_list=["arms"], equipment_profile=[], constraints=[],
         level="beginner", days_per_week=1, session_minutes=30, block_weeks=1, created="2026-08-25",
     )
     ids = {ex.exercise_id for ex in program.weeks[0].sessions[0].exercises}
     assert ids == {"diamond_pushup"}  # table_inverted_row needs sturdy_table, unowned
+
+
+def test_real_db_zero_equipment_arm_day_is_one_triceps_pick_plus_a_push_fallback():
+    # What SKILL.md promises the user. Against the real DB (not the trimmed
+    # fixture above) a zero-equipment arm day is exactly two exercises: the
+    # triceps bucket's pick, plus the generic "push" pattern-fallback bucket
+    # -- there is no bodyweight biceps bucket without a table. `--minutes`
+    # stops mattering once past 2 slots' worth.
+    exercises = exercises_mod.load_exercises()
+    for minutes in (7, 14, 20, 30, 60):
+        ids = [e["exercise_id"] for e in gen_mod._pick_focus_exercises(
+            exercises, "arms", [], [], session_minutes=minutes)]
+        assert ids == ["diamond_pushup", "incline_pushup"], minutes
 
 
 def test_focus_program_meta_reflects_the_split():

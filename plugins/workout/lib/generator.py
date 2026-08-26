@@ -388,9 +388,23 @@ def generate_program(exercises: list, equipment_profile: list, constraints: list
 def _focus_slot_count(available: int, session_minutes: int) -> int:
     """How many exercises fill one focused session: the minutes-derived slot
     count (floored at 2), capped by how many distinct sub-category buckets
-    are actually available -- never invent a second exercise from a pool of
-    one."""
+    are actually available -- never *request* a second exercise from a pool
+    of one.
+
+    The cap is belt-and-braces: the sole caller slices `ordered_keys` with
+    this count, and a slice already stops at the list's end. Keeping it here
+    means the returned number is an honest answer to "how many exercises
+    will this session have" on its own, rather than one that is only correct
+    once the caller's slicing silently rescues it -- so it is unit-tested
+    directly (see test_generator.py) rather than through the pipeline, where
+    the slice masks any regression."""
     return min(available, max(2, int(session_minutes) // MINUTES_PER_FOCUS_SLOT))
+
+
+def _fallback_pattern_rank(key: str) -> int:
+    """Where a pattern-fallback bucket sits in `PATTERN_ORDER`. Unknown
+    patterns sort last."""
+    return PATTERN_ORDER.index(key) if key in PATTERN_ORDER else len(PATTERN_ORDER)
 
 
 def _pick_focus_exercises(exercises: list, focus: str, equipment_profile, constraints,
@@ -399,15 +413,26 @@ def _pick_focus_exercises(exercises: list, focus: str, equipment_profile, constr
     sub-category bucket within the focus's patterns. Named sub-categories
     (e.g. "triceps") sort before pattern-fallback buckets (e.g. a plain
     "push" bucket of untagged compounds), so a short session surfaces the
-    focus's dedicated variety before generic filler. Sized by
-    session_minutes via `_focus_slot_count`."""
+    focus's dedicated variety before generic filler.
+
+    Within the fallback tier the order is `PATTERN_ORDER`'s, not
+    alphabetical, for the same reason `generate_program` uses it: truncating
+    a short session has to drop the least essential work last. No leg
+    exercise carries a `sub_category`, so all three of "legs"'s buckets land
+    in that tier -- sorted alphabetically a 20-minute leg day opened with a
+    loaded carry and dropped the squat entirely.
+
+    Sized by session_minutes via `_focus_slot_count`."""
     patterns = FOCUS_PATTERNS[focus]
     eligible = [
         e for e in exercises_mod.filter_exercises(exercises, equipment_profile, constraints)
         if e["movement_pattern"] in patterns
     ]
     buckets = exercises_mod.bucket_by_sub_category(eligible)
-    ordered_keys = sorted(buckets, key=lambda k: (k in patterns, k))
+    ordered_keys = sorted(
+        buckets,
+        key=lambda k: (k in patterns, _fallback_pattern_rank(k) if k in patterns else 0, k),
+    )
     slot_count = _focus_slot_count(len(ordered_keys), session_minutes)
     return [_pick_representative(buckets[key]) for key in ordered_keys[:slot_count]]
 
@@ -427,6 +452,11 @@ def generate_focus_program(exercises: list, focus_list: list, equipment_profile:
         focus = focus_list[(day - 1) % len(focus_list)]
         picks = _pick_focus_exercises(exercises, focus, equipment_profile, constraints, session_minutes)
         slot_series = []
+        # Deliberately 45s, shorter than the full-body generator's 60s/90s:
+        # a focused session's consecutive exercises hit different
+        # sub-categories of the same area rather than the same lift again,
+        # so recovery between them is quicker and the session still fits
+        # the requested minutes.
         for ex in picks:
             if ex.get("ladder_group"):
                 entry = {"ladder_group": ex["ladder_group"], "sets": DEFAULT_SETS,
