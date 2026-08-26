@@ -38,8 +38,11 @@ def validate_constraints(tokens) -> list:
 
 
 def validate_focus(tokens) -> list:
-    """Return the tokens unchanged, or raise TokenError naming the bad one."""
-    return _check(tokens, set(FOCUS_AREAS), "focus area")
+    """Return the tokens deduped (first occurrence wins, order preserved), or
+    raise TokenError naming the bad one. `--focus core,core` is a typo, not a
+    request for two identical core days -- left as-is it prints a program
+    whose goal reads "split: core, core"."""
+    return list(dict.fromkeys(_check(tokens, set(FOCUS_AREAS), "focus area")))
 
 
 def equipment_ids(catalog=None) -> set:

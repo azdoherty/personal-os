@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS exercises (
     exercise_id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     movement_pattern TEXT NOT NULL,
+    sub_category TEXT,
     equipment_required TEXT NOT NULL,
     constraint_flags TEXT NOT NULL,
     ladder_group TEXT,
