@@ -305,6 +305,23 @@ def test_generate_program_leaves_generated_load_unset_for_user_to_fill_in():
     assert loaded and all(ex.load.value is None for ex in loaded)
 
 
+def test_ladder_exercise_notes_update_as_the_program_climbs_rungs():
+    ladder = [
+        {"exercise_id": "box_squat", "name": "Box Squat", "movement_pattern": "squat",
+         "equipment_required": [], "constraint_flags": [], "ladder_group": "squat_bw",
+         "ladder_rank": 0, "default_reps": "10-15",
+         "notes": "Sit back onto a chair or box, stand back up."},
+        {"exercise_id": "bodyweight_squat", "name": "Bodyweight Squat", "movement_pattern": "squat",
+         "equipment_required": [], "constraint_flags": [], "ladder_group": "squat_bw",
+         "ladder_rank": 1, "default_reps": "12-15",
+         "notes": "Feet shoulder-width, sit the hips back and down, chest tall."},
+    ]
+    entry = {"ladder_group": "squat_bw", "sets": 3, "weeks_per_rung": 1, "tempo": "2-0-2", "rest": "60s"}
+    weeks = gen_mod._build_ladder_exercise(entry, ladder, 3, equipment_profile=[], constraints=[])
+    assert weeks[0].notes == "Sit back onto a chair or box, stand back up."
+    assert weeks[1].notes == "Feet shoulder-width, sit the hips back and down, chest tall."
+
+
 def test_real_templates_load_and_build_valid_programs():
     exercises = exercises_mod.load_exercises()
     for template in templates_mod.load_all_templates():

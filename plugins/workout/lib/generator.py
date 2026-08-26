@@ -189,7 +189,7 @@ def _build_ladder_exercise(entry: dict, exercises: list, block_weeks: int,
         result.append(ProgramExercise(
             exercise_id=step["exercise_id"], name=step["name"], movement_pattern=movement_pattern,
             sets=entry["sets"], reps=step["reps"], load=LoadSpec(type="bodyweight", progression_rule=rule),
-            tempo=entry["tempo"], rest=entry["rest"], notes=entry.get("notes", ""),
+            tempo=entry["tempo"], rest=entry["rest"], notes=step.get("notes", ""),
         ))
     return result
 
@@ -348,8 +348,7 @@ def generate_program(exercises: list, equipment_profile: list, constraints: list
             ex = representatives[pattern]
             if ex.get("ladder_group"):
                 entry = {"ladder_group": ex["ladder_group"], "sets": DEFAULT_SETS,
-                         "weeks_per_rung": DEFAULT_WEEKS_PER_RUNG, "tempo": "2-0-2", "rest": "60s",
-                         "notes": ex.get("notes", "")}
+                         "weeks_per_rung": DEFAULT_WEEKS_PER_RUNG, "tempo": "2-0-2", "rest": "60s"}
                 slot_series.append(_build_ladder_exercise(
                     entry, exercises, block_weeks, equipment_profile, constraints))
             else:
