@@ -140,3 +140,42 @@ def test_every_ladder_group_is_equipment_and_pattern_uniform_across_rungs():
         assert len(patterns) == 1, (
             f"ladder group {group_name!r} spans multiple movement patterns: {patterns}"
         )
+
+
+def test_bucket_by_sub_category_uses_the_tag_when_present():
+    exercises = [
+        {"exercise_id": "dead_bug", "movement_pattern": "core", "sub_category": "anti_extension"},
+        {"exercise_id": "bird_dog", "movement_pattern": "core", "sub_category": "anti_rotation"},
+        {"exercise_id": "plank", "movement_pattern": "core", "sub_category": "anti_extension"},
+    ]
+    buckets = ex_mod.bucket_by_sub_category(exercises)
+    assert set(buckets) == {"anti_extension", "anti_rotation"}
+    assert {e["exercise_id"] for e in buckets["anti_extension"]} == {"dead_bug", "plank"}
+    assert {e["exercise_id"] for e in buckets["anti_rotation"]} == {"bird_dog"}
+
+
+def test_bucket_by_sub_category_falls_back_to_movement_pattern_when_untagged():
+    exercises = [
+        {"exercise_id": "box_squat", "movement_pattern": "squat"},
+        {"exercise_id": "db_goblet_squat", "movement_pattern": "squat"},
+        {"exercise_id": "glute_bridge", "movement_pattern": "hinge"},
+    ]
+    buckets = ex_mod.bucket_by_sub_category(exercises)
+    assert set(buckets) == {"squat", "hinge"}
+    assert len(buckets["squat"]) == 2
+
+
+def test_bucket_by_sub_category_mixes_tagged_and_untagged_within_one_pattern():
+    exercises = [
+        {"exercise_id": "table_inverted_row", "movement_pattern": "pull", "sub_category": "biceps"},
+        {"exercise_id": "db_bent_over_row", "movement_pattern": "pull"},
+    ]
+    buckets = ex_mod.bucket_by_sub_category(exercises)
+    assert set(buckets) == {"biceps", "pull"}
+
+
+def test_real_core_exercises_span_all_four_sub_categories():
+    real = ex_mod.load_exercises()
+    core = [e for e in real if e["movement_pattern"] == "core"]
+    buckets = ex_mod.bucket_by_sub_category(core)
+    assert set(buckets) == {"anti_extension", "anti_rotation", "flexion", "hip_flexor_endurance"}
