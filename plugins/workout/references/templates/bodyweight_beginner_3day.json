@@ -14,7 +14,7 @@
       "exercises": [
         {"ladder_group": "squat_bw", "sets": 3, "weeks_per_rung": 2, "tempo": "2-0-2", "rest": "60s", "notes": "Sit the hips back; keep the chest tall."},
         {"ladder_group": "push_bw", "sets": 3, "weeks_per_rung": 2, "tempo": "2-0-2", "rest": "60s", "notes": "Keep the body in a straight line, elbows ~45 degrees from the torso."},
-        {"ladder_group": "core_bw", "sets": 3, "weeks_per_rung": 2, "tempo": "n/a", "rest": "30s", "notes": "Move slowly; keep the low back pressed to the floor."}
+        {"ladder_group": "core_antiext_bw", "sets": 3, "weeks_per_rung": 2, "tempo": "n/a", "rest": "30s", "notes": "Move slowly; keep the low back pressed to the floor."}
       ]
     },
     {
@@ -23,7 +23,7 @@
       "exercises": [
         {"ladder_group": "hinge_bw", "sets": 3, "weeks_per_rung": 2, "tempo": "2-0-2", "rest": "60s", "notes": "Squeeze the glutes at the top; avoid arching the low back."},
         {"ladder_group": "pull_bw", "sets": 3, "weeks_per_rung": 2, "tempo": "2-0-2", "rest": "60s", "notes": "Use a sturdy table; pull the chest toward the table edge."},
-        {"ladder_group": "core_bw", "sets": 3, "weeks_per_rung": 2, "tempo": "n/a", "rest": "30s", "notes": "Move slowly; keep the low back pressed to the floor."}
+        {"ladder_group": "core_antiext_bw", "sets": 3, "weeks_per_rung": 2, "tempo": "n/a", "rest": "30s", "notes": "Move slowly; keep the low back pressed to the floor."}
       ]
     },
     {
