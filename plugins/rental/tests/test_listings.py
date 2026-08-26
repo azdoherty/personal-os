@@ -39,3 +39,20 @@ def test_blank_numeric_cells_become_none_not_crash():
     assert props[0].beds is None
     assert props[0].sqft is None
     assert props[0].list_price == 250000.0
+
+
+def test_url_column_with_redfin_pricing_disclaimer_suffix():
+    # Real Redfin "Download All" exports name this column
+    # 'URL (SEE https://.../comparative-market-analysis FOR INFO ON PRICING)',
+    # not a plain 'URL' -- confirmed against a real 2026-07 export. The column
+    # must be matched by prefix, not exact name, or every property's url silently
+    # comes back empty.
+    text = (
+        "PROPERTY TYPE,ADDRESS,CITY,STATE OR PROVINCE,ZIP OR POSTAL CODE,PRICE,"
+        "URL (SEE https://www.redfin.com/buy-a-home/comparative-market-analysis "
+        "FOR INFO ON PRICING)\n"
+        "Multi-Family (2-4 Unit),1 A St,Springfield,IL,62701,250000,"
+        "https://www.redfin.com/IL/Springfield/1-A-St/home/1\n"
+    )
+    props, _ = parse_redfin_csv(text)
+    assert props[0].url == "https://www.redfin.com/IL/Springfield/1-A-St/home/1"

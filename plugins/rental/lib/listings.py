@@ -39,9 +39,20 @@ def _int(row: dict, key: str) -> int | None:
     return int(v) if v is not None else None
 
 
+def _url_column(header: list[str]) -> str | None:
+    # Redfin suffixes this header with a pricing disclaimer that changes over
+    # time (e.g. "URL (SEE ... FOR INFO ON PRICING)"), so match by prefix
+    # rather than requiring an exact "URL" header.
+    for col in header:
+        if col.strip().upper().startswith("URL"):
+            return col
+    return None
+
+
 def parse_redfin_csv(text: str) -> tuple[list[Property], dict]:
     reader = csv.DictReader(io.StringIO(text))
     header = reader.fieldnames or []
+    url_col = _url_column(header)
     missing = [c for c in REQUIRED_COLUMNS if c not in header]
     if missing:
         raise SchemaError(
@@ -71,7 +82,7 @@ def parse_redfin_csv(text: str) -> tuple[list[Property], dict]:
             hoa_monthly=_num(row, "HOA/MONTH") or 0.0,
             latitude=_num(row, "LATITUDE"),
             longitude=_num(row, "LONGITUDE"),
-            url=(row.get("URL") or "").strip(),
+            url=(row.get(url_col) or "").strip() if url_col else "",
             mls=(row.get("MLS#") or "").strip(),
             days_on_market=_int(row, "DAYS ON MARKET"),
         ))
