@@ -422,5 +422,10 @@ def test_a_duplicated_focus_token_is_deduped_not_printed_twice(tmp_path, capsys)
         "--focus", "core,core", "--out", str(out), "--db", ":memory:",
     ])
     assert code == 0
-    assert "split: core, core" not in out.read_text(encoding="utf-8")
-    capsys.readouterr()
+    # render_markdown title-cases meta.goal, so the rendered literal is
+    # "Split: Core", not the lowercase "split: core" stored on the Program --
+    # asserting the lowercase form proved nothing, since it can never appear.
+    text = out.read_text(encoding="utf-8")
+    assert "**Goal:** Split: Core  " in text
+    assert "Split: Core, Core" not in text
+    assert "Built a core split routine." in capsys.readouterr().out
