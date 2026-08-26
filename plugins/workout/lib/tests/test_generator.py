@@ -520,6 +520,43 @@ def test_real_exercise_db_builds_a_valid_focus_program_for_every_area():
         assert program.weeks[0].sessions[0].exercises, focus
 
 
+def test_bodyweight_standalone_is_not_programmed_as_a_loaded_lift():
+    # diamond_pushup has no ladder_group, so it routes through
+    # _build_loaded_exercise like any standalone -- but it needs no equipment,
+    # so "____ lb" and "add 5lb" are nonsense on a push-up.
+    exercises = exercises_mod.load_exercises()
+    program = gen_mod.generate_focus_program(
+        exercises, focus_list=["arms"], equipment_profile=[], constraints=[], level="beginner",
+        days_per_week=1, session_minutes=30, block_weeks=2, created="2026-08-25",
+    )
+    diamond = next(
+        ex for ex in program.weeks[0].sessions[0].exercises if ex.exercise_id == "diamond_pushup"
+    )
+    assert diamond.load.type == "bodyweight"
+    assert diamond.load.value is None
+    assert "lb" not in diamond.load.progression_rule.lower()
+    # and it stays that way for every week of the block
+    for week in program.weeks:
+        ex = next(e for e in week.sessions[0].exercises if e.exercise_id == "diamond_pushup")
+        assert ex.load.type == "bodyweight" and ex.load.value is None
+
+
+def test_equipment_requiring_standalone_is_still_built_as_a_loaded_lift():
+    # The other half of the branch above: nothing changes for a standalone
+    # that actually needs gear.
+    exercises = exercises_mod.load_exercises()
+    program = gen_mod.generate_focus_program(
+        exercises, focus_list=["legs"], equipment_profile=["dumbbell"], constraints=[],
+        level="beginner", days_per_week=1, session_minutes=30, block_weeks=1, created="2026-08-25",
+    )
+    squat = next(
+        ex for ex in program.weeks[0].sessions[0].exercises if ex.exercise_id == "db_goblet_squat"
+    )
+    assert squat.load.type == "external"
+    assert squat.load.value is None  # generated loads are user-filled
+    assert "5.0lb" in squat.load.progression_rule
+
+
 def test_full_body_generator_still_produces_a_valid_core_pick_after_the_ladder_split():
     # Regression guard for the core_bw -> 4-group split (see the design
     # spec's "regression risk" section): full-body generation must still

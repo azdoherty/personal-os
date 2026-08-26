@@ -214,7 +214,23 @@ def _build_loaded_exercise(entry: dict, exercises: list, block_weeks: int, model
     def spoken(value) -> str:
         return f"{value} {suffix or 'reps'}".strip()
 
-    if model_name == "double-progression":
+    # A standalone exercise that needs no equipment is loaded by the body, not
+    # by a plate: "add 5lb to your push-up" is nonsense, and a "____ lb" cell
+    # on a Diamond Push-Up row is worse. Focus mode introduced the first such
+    # exercises (diamond_pushup / pike_pushup have no ladder_group, so they
+    # route through here rather than _build_ladder_exercise); every other
+    # standalone in the DB requires equipment and is unaffected.
+    bodyweight = not ex_meta.get("equipment_required")
+    if bodyweight:
+        # .get with defaults because this branch, unlike the double-progression
+        # one below, is also reachable from a "linear" entry, which carries no
+        # rep window.
+        rule = (
+            f"Add a rep each week; at {spoken(entry.get('reps_high', DEFAULT_REPS_HIGH))} for all "
+            f"sets, reset to {spoken(entry.get('reps_low', DEFAULT_REPS_LOW))} with a slower tempo "
+            f"or a harder variation."
+        )
+    elif model_name == "double-progression":
         rule = (
             f"Add a rep each week; at {spoken(entry['reps_high'])} for all sets, "
             f"add {entry['load_increment']}lb and reset to {spoken(entry['reps_low'])}."
@@ -226,11 +242,14 @@ def _build_loaded_exercise(entry: dict, exercises: list, block_weeks: int, model
         )
     result = []
     for step in weeks:
+        load = (
+            LoadSpec(type="bodyweight", value=None, progression_rule=rule) if bodyweight
+            else LoadSpec(type="external", value=step["load_value"], progression_rule=rule)
+        )
         result.append(ProgramExercise(
             exercise_id=entry["exercise_id"], name=ex_meta["name"],
             movement_pattern=ex_meta["movement_pattern"], sets=entry["sets"],
-            reps=as_reps(step["reps"]),
-            load=LoadSpec(type="external", value=step["load_value"], progression_rule=rule),
+            reps=as_reps(step["reps"]), load=load,
             tempo=entry["tempo"], rest=entry["rest"], notes=entry.get("notes", ""),
         ))
     return result
