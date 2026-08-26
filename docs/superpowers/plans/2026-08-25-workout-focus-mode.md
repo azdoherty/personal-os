@@ -345,19 +345,53 @@ Expected: all pass, including the new test.
 
 - [ ] **Step 9: Strip the now-dead static notes from the curated template's ladder slots**
 
-The template's per-slot `"notes"` field is no longer read for ladder slots (the fix above always uses the active rung's own notes). Leaving stale static text in the template JSON would misrepresent what actually gets printed. In `plugins/workout/references/templates/bodyweight_beginner_3day.json`, remove the `"notes"` key from all three ladder entries (the `squat_bw`, `push_bw`, and `core_antiext_bw` slots), e.g. change:
+The template's per-slot `"notes"` field is no longer read for ANY ladder slot (the fix above always uses the active rung's own notes instead). Every entry in this template is ladder-based -- all 9 exercise entries across its 3 sessions currently carry static `"notes"` text that becomes dead after this fix, spanning all 5 groups the template uses (`squat_bw`, `push_bw`, `hinge_bw`, `pull_bw`, `core_antiext_bw`). Leaving stale static text in the JSON would misrepresent what actually gets printed.
+
+Replace the full contents of `plugins/workout/references/templates/bodyweight_beginner_3day.json` with (this is Task 1 Step 3's renamed version, with `"notes"` removed from every entry):
 
 ```json
-        {"ladder_group": "squat_bw", "sets": 3, "weeks_per_rung": 2, "tempo": "2-0-2", "rest": "60s", "notes": "Sit the hips back; keep the chest tall."},
-```
-
-to:
-
-```json
+{
+  "template_id": "bodyweight_beginner_3day",
+  "level": "beginner",
+  "goal": "general_strength",
+  "days_per_week": 3,
+  "session_minutes": 30,
+  "required_equipment": [],
+  "progression_model": "variation-ladder",
+  "block_weeks": 8,
+  "sessions": [
+    {
+      "day": 1,
+      "label": "Full Body A",
+      "exercises": [
         {"ladder_group": "squat_bw", "sets": 3, "weeks_per_rung": 2, "tempo": "2-0-2", "rest": "60s"},
+        {"ladder_group": "push_bw", "sets": 3, "weeks_per_rung": 2, "tempo": "2-0-2", "rest": "60s"},
+        {"ladder_group": "core_antiext_bw", "sets": 3, "weeks_per_rung": 2, "tempo": "n/a", "rest": "30s"}
+      ]
+    },
+    {
+      "day": 2,
+      "label": "Full Body B",
+      "exercises": [
+        {"ladder_group": "hinge_bw", "sets": 3, "weeks_per_rung": 2, "tempo": "2-0-2", "rest": "60s"},
+        {"ladder_group": "pull_bw", "sets": 3, "weeks_per_rung": 2, "tempo": "2-0-2", "rest": "60s"},
+        {"ladder_group": "core_antiext_bw", "sets": 3, "weeks_per_rung": 2, "tempo": "n/a", "rest": "30s"}
+      ]
+    },
+    {
+      "day": 3,
+      "label": "Full Body C",
+      "exercises": [
+        {"ladder_group": "squat_bw", "sets": 3, "weeks_per_rung": 2, "tempo": "2-0-2", "rest": "60s"},
+        {"ladder_group": "push_bw", "sets": 3, "weeks_per_rung": 2, "tempo": "2-0-2", "rest": "60s"},
+        {"ladder_group": "hinge_bw", "sets": 3, "weeks_per_rung": 2, "tempo": "2-0-2", "rest": "60s"}
+      ]
+    }
+  ]
+}
 ```
 
-Apply the same removal to the `push_bw` and `core_antiext_bw` entries in all three sessions (day 1, day 2, day 3 -- `squat_bw` and `push_bw` each appear twice, `core_antiext_bw` twice; every occurrence loses its `"notes"` key).
+(If Task 1 Step 3's rename hasn't landed yet when you reach this step, apply both changes together -- the file above already reflects `core_bw` renamed to `core_antiext_bw`.)
 
 - [ ] **Step 10: Run the full plugin suite to confirm no regression**
 
