@@ -318,3 +318,51 @@ def test_cli_prints_the_saved_program_id_and_creates_missing_output_dirs(tmp_pat
     assert code == 0
     assert "Saved as prog_" in capsys.readouterr().out
     assert out.read_text(encoding="utf-8").startswith("# 2-Week Home Strength Program")
+
+
+def test_focus_mode_builds_a_split_program(conn):
+    program, program_id, notes = build_mod.build(
+        "beginner", 3, 30, [], [], 4, conn, focus=["core", "legs", "arms"]
+    )
+    assert program.meta.source == "generated-focus"
+    assert program.meta.goal == "split: core, legs, arms"
+    labels = [s.label for s in program.weeks[0].sessions]
+    assert labels == ["Core", "Legs", "Arms"]
+    assert model.validate_program(program) == []
+    assert _saved_exercise_count(conn, program_id) > 0
+    assert store.get_program(conn, program_id).meta.source == "generated-focus"
+    _renders(program)
+
+
+def test_focus_mode_skips_template_matching_entirely(conn):
+    # Even with dumbbell equipment (which would normally match a curated
+    # template), --focus always routes to the generator.
+    program, _, notes = build_mod.build(
+        "beginner", 3, 40, ["dumbbell"], [], 4, conn, focus=["legs"]
+    )
+    assert program.meta.source == "generated-focus"
+    assert not any("template" in n.lower() for n in notes)
+
+
+def test_cli_rejects_a_typod_focus_instead_of_ignoring_it(tmp_path, capsys):
+    out = tmp_path / "program.md"
+    code = build_mod.main([
+        "--level", "beginner", "--days", "3", "--minutes", "30",
+        "--focus", "cardio", "--out", str(out), "--db", ":memory:",
+    ])
+    assert code == 2
+    assert "cardio" in capsys.readouterr().err
+    assert not out.exists()
+
+
+def test_cli_focus_mode_end_to_end(tmp_path, capsys):
+    out = tmp_path / "program.md"
+    code = build_mod.main([
+        "--level", "beginner", "--days", "3", "--minutes", "20",
+        "--focus", "core", "--block-weeks", "4", "--out", str(out), "--db", ":memory:",
+    ])
+    assert code == 0
+    text = out.read_text(encoding="utf-8")
+    assert "Session length: ~20 min" in text or "~20 min" in text
+    stdout = capsys.readouterr().out
+    assert "Saved as prog_" in stdout

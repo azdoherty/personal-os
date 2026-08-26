@@ -62,12 +62,36 @@ def _choose_template(all_templates, exercises, level, days, minutes, equipment, 
     )
 
 
-def build(level: str, days: int, minutes: int, equipment: list, constraints: list, block_weeks, conn):
+def build(level: str, days: int, minutes: int, equipment: list, constraints: list, block_weeks, conn,
+          focus=None):
     """Template ranking -> buildability check -> generator fallback -> validate -> save.
+
+    `focus`, when given, skips template matching entirely (v1 templates are
+    all full-body) and builds a single-focus split routine instead, cycling
+    across `days` if there are fewer focuses than days.
 
     Returns (program, program_id, notes).
     """
     exercises = exercises_mod.load_exercises()
+
+    if focus:
+        program = generator.generate_focus_program(
+            exercises, focus_list=focus, equipment_profile=equipment, constraints=constraints,
+            level=level, days_per_week=days, session_minutes=minutes, block_weeks=block_weeks or 8,
+            created=dt.date.today().isoformat(),
+        )
+        notes = [f"Built a {', '.join(focus)} split routine."]
+        if not any(s.exercises for w in program.weeks for s in w.sessions):
+            raise BuildError(
+                "No eligible exercises found for your equipment/constraints in this split. "
+                "Loosen a constraint, or run equipment-advisor to see what to buy."
+            )
+        errors = model.validate_program(program)
+        if errors:
+            raise ValueError("generated program failed validation: " + "; ".join(errors))
+        program_id = store.save_program(conn, program)
+        return program, program_id, notes
+
     all_templates = templates_mod.load_all_templates()
     # `outcome` is the buildability report when a template was chosen, and the
     # reason the best candidate was rejected when none was.
@@ -130,6 +154,9 @@ def main(argv=None) -> int:
     parser.add_argument("--minutes", required=True, type=int)
     parser.add_argument("--equipment", default="", help="comma-separated equipment_ids owned")
     parser.add_argument("--constraints", default="", help="comma-separated constraint flags to avoid")
+    parser.add_argument("--focus", default="",
+                         help="comma-separated split focuses (core,legs,arms); cycles across --days. "
+                              "When set, skips curated templates entirely.")
     parser.add_argument("--block-weeks", type=int, default=None)
     parser.add_argument("--format", choices=["markdown", "csv", "json"], default="markdown")
     parser.add_argument("--out", required=True, help="output file path")
@@ -152,6 +179,7 @@ def main(argv=None) -> int:
     try:
         equipment = validation.validate_equipment(validation.split_tokens(args.equipment))
         constraints = validation.validate_constraints(validation.split_tokens(args.constraints))
+        focus = validation.validate_focus(validation.split_tokens(args.focus))
     except validation.TokenError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
@@ -159,7 +187,7 @@ def main(argv=None) -> int:
     conn = store.connect(args.db)
     try:
         program, program_id, notes = build(args.level, args.days, args.minutes, equipment,
-                                            constraints, args.block_weeks, conn)
+                                            constraints, args.block_weeks, conn, focus=focus)
     except BuildError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
