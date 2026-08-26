@@ -541,6 +541,26 @@ def test_bodyweight_standalone_is_not_programmed_as_a_loaded_lift():
         assert ex.load.type == "bodyweight" and ex.load.value is None
 
 
+def test_chair_only_standalone_is_not_programmed_as_a_loaded_lift():
+    # chair_dip needs a chair, but only to put your hands on -- the chair
+    # adds no resistance, so it's bodyweight just like diamond_pushup.
+    # Also: _pick_representative sorts standalones by -len(equipment_required),
+    # so a chair owner's triceps bucket picks chair_dip (1 piece of
+    # equipment) over diamond_pushup (0 pieces) -- this is exactly the row
+    # the earlier bodyweight fix never reaches for a chair owner.
+    exercises = exercises_mod.load_exercises()
+    program = gen_mod.generate_focus_program(
+        exercises, focus_list=["arms"], equipment_profile=["chair"], constraints=[],
+        level="beginner", days_per_week=1, session_minutes=30, block_weeks=2, created="2026-08-25",
+    )
+    chair_dip = next(
+        ex for ex in program.weeks[0].sessions[0].exercises if ex.exercise_id == "chair_dip"
+    )
+    assert chair_dip.load.type == "bodyweight"
+    assert chair_dip.load.value is None
+    assert "lb" not in chair_dip.load.progression_rule.lower()
+
+
 def test_equipment_requiring_standalone_is_still_built_as_a_loaded_lift():
     # The other half of the branch above: nothing changes for a standalone
     # that actually needs gear.

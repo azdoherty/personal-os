@@ -28,6 +28,12 @@ FOCUS_PATTERNS = {
     "arms": ("push", "pull"),
 }
 MINUTES_PER_FOCUS_SLOT = 7
+# Equipment that lets you perform a bodyweight movement (positioning/apparatus
+# to put your hands/feet on) rather than equipment that adds resistance. A
+# standalone exercise whose equipment_required is a subset of this set is
+# still a bodyweight exercise for progression purposes -- e.g. chair_dip
+# needs a chair to dip off of, but the chair adds no load.
+NON_LOADING_EQUIPMENT = frozenset({"chair"})
 
 
 class LadderUnavailable(ValueError):
@@ -214,13 +220,16 @@ def _build_loaded_exercise(entry: dict, exercises: list, block_weeks: int, model
     def spoken(value) -> str:
         return f"{value} {suffix or 'reps'}".strip()
 
-    # A standalone exercise that needs no equipment is loaded by the body, not
-    # by a plate: "add 5lb to your push-up" is nonsense, and a "____ lb" cell
-    # on a Diamond Push-Up row is worse. Focus mode introduced the first such
-    # exercises (diamond_pushup / pike_pushup have no ladder_group, so they
-    # route through here rather than _build_ladder_exercise); every other
-    # standalone in the DB requires equipment and is unaffected.
-    bodyweight = not ex_meta.get("equipment_required")
+    # A standalone exercise that needs no equipment -- or only equipment that
+    # merely positions the body (see NON_LOADING_EQUIPMENT) -- is loaded by
+    # the body, not by a plate: "add 5lb to your push-up" is nonsense, and a
+    # "____ lb" cell on a Diamond Push-Up or Chair Dip row is worse. Focus
+    # mode introduced the first such exercises (diamond_pushup / pike_pushup
+    # have no equipment at all; chair_dip needs only a chair to dip off of;
+    # none has a ladder_group, so they route through here rather than
+    # _build_ladder_exercise); every other standalone in the DB requires
+    # genuinely load-adding equipment and is unaffected.
+    bodyweight = set(ex_meta.get("equipment_required", [])) <= NON_LOADING_EQUIPMENT
     if bodyweight:
         # .get with defaults because this branch, unlike the double-progression
         # one below, is also reachable from a "linear" entry, which carries no
