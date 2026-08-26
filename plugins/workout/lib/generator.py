@@ -22,6 +22,12 @@ DEFAULT_LOAD_INCREMENT = 5.0
 MINUTES_PER_SLOT = 10
 MIN_SLOTS = 2
 MAX_SLOTS = len(PATTERN_ORDER)
+FOCUS_PATTERNS = {
+    "legs": ("squat", "hinge", "carry"),
+    "core": ("core",),
+    "arms": ("push", "pull"),
+}
+MINUTES_PER_FOCUS_SLOT = 7
 
 
 class LadderUnavailable(ValueError):
@@ -373,6 +379,82 @@ def generate_program(exercises: list, equipment_profile: list, constraints: list
         level=level, goal=goal, days_per_week=days_per_week, session_minutes=session_minutes,
         equipment_profile=list(equipment_profile), constraints=list(constraints), created=created,
         source="generated",
+    )
+    return Program(
+        meta=meta, progression=Progression(model="double-progression", block_weeks=block_weeks), weeks=weeks
+    )
+
+
+def _focus_slot_count(available: int, session_minutes: int) -> int:
+    """How many exercises fill one focused session: the minutes-derived slot
+    count (floored at 2), capped by how many distinct sub-category buckets
+    are actually available -- never invent a second exercise from a pool of
+    one."""
+    return min(available, max(2, int(session_minutes) // MINUTES_PER_FOCUS_SLOT))
+
+
+def _pick_focus_exercises(exercises: list, focus: str, equipment_profile, constraints,
+                           session_minutes: int) -> list:
+    """The representative exercises for one focused session: one per
+    sub-category bucket within the focus's patterns. Named sub-categories
+    (e.g. "triceps") sort before pattern-fallback buckets (e.g. a plain
+    "push" bucket of untagged compounds), so a short session surfaces the
+    focus's dedicated variety before generic filler. Sized by
+    session_minutes via `_focus_slot_count`."""
+    patterns = FOCUS_PATTERNS[focus]
+    eligible = [
+        e for e in exercises_mod.filter_exercises(exercises, equipment_profile, constraints)
+        if e["movement_pattern"] in patterns
+    ]
+    buckets = exercises_mod.bucket_by_sub_category(eligible)
+    ordered_keys = sorted(buckets, key=lambda k: (k in patterns, k))
+    slot_count = _focus_slot_count(len(ordered_keys), session_minutes)
+    return [_pick_representative(buckets[key]) for key in ordered_keys[:slot_count]]
+
+
+def generate_focus_program(exercises: list, focus_list: list, equipment_profile: list,
+                            constraints: list, level: str, days_per_week: int,
+                            session_minutes: int, block_weeks: int, created: str) -> Program:
+    """Build a single-focus split program: each day is assigned one focus
+    from `focus_list`, cycling if there are fewer focuses than days. Every
+    exercise is picked from a distinct sub-category bucket within that
+    focus's patterns (see `_pick_focus_exercises`), so a session is several
+    different exercises targeting the same area rather than one exercise
+    repeated for the whole block.
+    """
+    per_slot_weeks = []
+    for day in range(1, days_per_week + 1):
+        focus = focus_list[(day - 1) % len(focus_list)]
+        picks = _pick_focus_exercises(exercises, focus, equipment_profile, constraints, session_minutes)
+        slot_series = []
+        for ex in picks:
+            if ex.get("ladder_group"):
+                entry = {"ladder_group": ex["ladder_group"], "sets": DEFAULT_SETS,
+                         "weeks_per_rung": DEFAULT_WEEKS_PER_RUNG, "tempo": "2-0-2", "rest": "45s"}
+                slot_series.append(_build_ladder_exercise(
+                    entry, exercises, block_weeks, equipment_profile, constraints))
+            else:
+                reps_low, reps_high, reps_suffix = _reps_from_db(ex)
+                entry = {"exercise_id": ex["exercise_id"], "sets": DEFAULT_SETS,
+                         "reps_low": reps_low, "reps_high": reps_high, "reps_suffix": reps_suffix,
+                         "rep_step": DEFAULT_REP_STEP, "load_value": None,
+                         "load_increment": DEFAULT_LOAD_INCREMENT, "tempo": "2-0-2", "rest": "45s",
+                         "notes": ex.get("notes", "")}
+                slot_series.append(_build_loaded_exercise(entry, exercises, block_weeks, "double-progression"))
+        per_slot_weeks.append((day, focus.capitalize(), slot_series))
+
+    weeks = []
+    for week_number in range(1, block_weeks + 1):
+        sessions = []
+        for day, label, slot_series in per_slot_weeks:
+            week_exercises = [series[week_number - 1] for series in slot_series]
+            sessions.append(Session(day=day, label=label, exercises=week_exercises))
+        weeks.append(Week(number=week_number, sessions=sessions))
+
+    meta = ProgramMeta(
+        level=level, goal=f"split: {', '.join(focus_list)}", days_per_week=days_per_week,
+        session_minutes=session_minutes, equipment_profile=list(equipment_profile),
+        constraints=list(constraints), created=created, source="generated-focus",
     )
     return Program(
         meta=meta, progression=Progression(model="double-progression", block_weeks=block_weeks), weeks=weeks

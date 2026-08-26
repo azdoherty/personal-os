@@ -331,3 +331,147 @@ def test_real_templates_load_and_build_valid_programs():
         )
         errors = model.validate_program(program)
         assert errors == [], f"{template['template_id']}: {errors}"
+
+
+FOCUS_EXERCISES = [
+    {"exercise_id": "dead_bug", "name": "Dead Bug", "movement_pattern": "core",
+     "sub_category": "anti_extension", "equipment_required": [], "constraint_flags": [],
+     "ladder_group": "core_antiext_bw", "ladder_rank": 0, "default_reps": "10-12 / side", "notes": ""},
+    {"exercise_id": "plank", "name": "Plank", "movement_pattern": "core",
+     "sub_category": "anti_extension", "equipment_required": [], "constraint_flags": [],
+     "ladder_group": "core_antiext_bw", "ladder_rank": 1, "default_reps": "30-45s", "notes": ""},
+    {"exercise_id": "bird_dog", "name": "Bird Dog", "movement_pattern": "core",
+     "sub_category": "anti_rotation", "equipment_required": [], "constraint_flags": [],
+     "ladder_group": "core_antirot_bw", "ladder_rank": 0, "default_reps": "8-10 / side", "notes": ""},
+    {"exercise_id": "curl_up", "name": "Curl-Up", "movement_pattern": "core",
+     "sub_category": "flexion", "equipment_required": [], "constraint_flags": [],
+     "ladder_group": "core_flexion_bw", "ladder_rank": 0, "default_reps": "10-12", "notes": ""},
+    {"exercise_id": "knee_tuck_hold", "name": "Knee Tuck Hold", "movement_pattern": "core",
+     "sub_category": "hip_flexor_endurance", "equipment_required": [], "constraint_flags": [],
+     "ladder_group": "core_hipflexor_bw", "ladder_rank": 0, "default_reps": "15-20s", "notes": ""},
+    {"exercise_id": "box_squat", "name": "Box Squat", "movement_pattern": "squat",
+     "equipment_required": [], "constraint_flags": [], "ladder_group": "squat_bw",
+     "ladder_rank": 0, "default_reps": "10-15", "notes": ""},
+    {"exercise_id": "glute_bridge", "name": "Glute Bridge", "movement_pattern": "hinge",
+     "equipment_required": [], "constraint_flags": [], "ladder_group": "hinge_bw",
+     "ladder_rank": 0, "default_reps": "12-15", "notes": ""},
+    {"exercise_id": "diamond_pushup", "name": "Diamond Push-Up", "movement_pattern": "push",
+     "sub_category": "triceps", "equipment_required": [], "constraint_flags": ["arm-load"],
+     "ladder_group": None, "ladder_rank": None, "default_reps": "6-10", "notes": ""},
+    {"exercise_id": "table_inverted_row", "name": "Table Inverted Row", "movement_pattern": "pull",
+     "sub_category": "biceps", "equipment_required": ["sturdy_table"], "constraint_flags": ["arm-load", "grip"],
+     "ladder_group": None, "ladder_rank": None, "default_reps": "8-10", "notes": ""},
+    {"exercise_id": "db_bent_over_row", "name": "DB Bent-Over Row", "movement_pattern": "pull",
+     "equipment_required": ["dumbbell"], "constraint_flags": ["grip", "arm-load"],
+     "ladder_group": None, "ladder_rank": None, "default_reps": "8-12", "notes": ""},
+]
+
+
+def test_focus_program_core_session_has_more_than_one_exercise():
+    program = gen_mod.generate_focus_program(
+        FOCUS_EXERCISES, focus_list=["core"], equipment_profile=[], constraints=[],
+        level="beginner", days_per_week=3, session_minutes=30, block_weeks=4, created="2026-08-25",
+    )
+    session = program.weeks[0].sessions[0]
+    assert len(session.exercises) > 1
+    ids = {ex.exercise_id for ex in session.exercises}
+    assert ids <= {"dead_bug", "bird_dog", "curl_up", "knee_tuck_hold"}
+    assert model.validate_program(program) == []
+
+
+def test_focus_program_short_session_still_caps_at_available_sub_categories():
+    # 1 minute -> max(2, 0) = 2 wanted, but "legs" here only has squat+hinge
+    # eligible (2 buckets) -- this must not somehow invent a 3rd exercise.
+    program = gen_mod.generate_focus_program(
+        FOCUS_EXERCISES, focus_list=["legs"], equipment_profile=[], constraints=[],
+        level="beginner", days_per_week=1, session_minutes=1, block_weeks=1, created="2026-08-25",
+    )
+    assert len(program.weeks[0].sessions[0].exercises) == 2
+
+
+def test_focus_program_prefers_named_sub_categories_before_generic_pattern_fallback():
+    # arms: "triceps" and "biceps" are named sub-categories; the generic
+    # "pull" bucket (db_bent_over_row) is a pattern-fallback and must lose
+    # the slot when only 2 fit.
+    program = gen_mod.generate_focus_program(
+        FOCUS_EXERCISES, focus_list=["arms"], equipment_profile=["sturdy_table", "dumbbell"],
+        constraints=[], level="beginner", days_per_week=1, session_minutes=14, block_weeks=1,
+        created="2026-08-25",
+    )
+    ids = {ex.exercise_id for ex in program.weeks[0].sessions[0].exercises}
+    assert ids == {"diamond_pushup", "table_inverted_row"}
+
+
+def test_focus_program_cycles_multiple_focuses_across_days():
+    program = gen_mod.generate_focus_program(
+        FOCUS_EXERCISES, focus_list=["core", "legs"], equipment_profile=[], constraints=[],
+        level="beginner", days_per_week=4, session_minutes=30, block_weeks=1, created="2026-08-25",
+    )
+    labels = [s.label for s in program.weeks[0].sessions]
+    assert labels == ["Core", "Legs", "Core", "Legs"]
+
+
+def test_focus_program_zero_equipment_arms_is_triceps_only():
+    program = gen_mod.generate_focus_program(
+        FOCUS_EXERCISES, focus_list=["arms"], equipment_profile=[], constraints=[],
+        level="beginner", days_per_week=1, session_minutes=30, block_weeks=1, created="2026-08-25",
+    )
+    ids = {ex.exercise_id for ex in program.weeks[0].sessions[0].exercises}
+    assert ids == {"diamond_pushup"}  # table_inverted_row needs sturdy_table, unowned
+
+
+def test_focus_program_meta_reflects_the_split():
+    program = gen_mod.generate_focus_program(
+        FOCUS_EXERCISES, focus_list=["core", "arms"], equipment_profile=[], constraints=[],
+        level="beginner", days_per_week=2, session_minutes=30, block_weeks=1, created="2026-08-25",
+    )
+    assert program.meta.source == "generated-focus"
+    assert program.meta.goal == "split: core, arms"
+
+
+def test_focus_program_ladder_exercise_still_progresses_across_the_block():
+    program = gen_mod.generate_focus_program(
+        FOCUS_EXERCISES, focus_list=["core"], equipment_profile=[], constraints=[],
+        level="beginner", days_per_week=1, session_minutes=8, block_weeks=3, created="2026-08-25",
+    )
+    # session_minutes=8 -> max(2, 8//7=1) = 2 slots, only anti_extension's
+    # ladder is guaranteed to be selected first (alphabetically named).
+    week1_ex = next(
+        ex for ex in program.weeks[0].sessions[0].exercises
+        if ex.movement_pattern == "core" and ex.exercise_id in {"dead_bug", "plank"}
+    )
+    week3_ex = next(
+        ex for ex in program.weeks[2].sessions[0].exercises
+        if ex.movement_pattern == "core" and ex.exercise_id in {"dead_bug", "plank"}
+    )
+    assert week1_ex.exercise_id == "dead_bug"
+    assert week3_ex.exercise_id == "plank"
+
+
+def test_real_exercise_db_builds_a_valid_focus_program_for_every_area():
+    exercises = exercises_mod.load_exercises()
+    for focus in model.FOCUS_AREAS:
+        program = gen_mod.generate_focus_program(
+            exercises, focus_list=[focus], equipment_profile=[], constraints=[], level="beginner",
+            days_per_week=1, session_minutes=30, block_weeks=2, created="2026-08-25",
+        )
+        assert model.validate_program(program) == [], focus
+        assert program.weeks[0].sessions[0].exercises, focus
+
+
+def test_full_body_generator_still_produces_a_valid_core_pick_after_the_ladder_split():
+    # Regression guard for the core_bw -> 4-group split (see the design
+    # spec's "regression risk" section): full-body generation must still
+    # deterministically pick exactly one valid core exercise, even though
+    # the specific winner changes now that there are 4 rank-0 candidates.
+    exercises = exercises_mod.load_exercises()
+    program = gen_mod.generate_program(
+        exercises, equipment_profile=[], constraints=[], level="beginner",
+        days_per_week=1, session_minutes=60, block_weeks=1, created="2026-08-25",
+    )
+    core_exercises = [
+        ex for w in program.weeks for s in w.sessions for ex in s.exercises
+        if ex.movement_pattern == "core"
+    ]
+    assert len(core_exercises) == 1
+    assert model.validate_program(program) == []
