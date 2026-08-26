@@ -8,7 +8,7 @@ actionable error instead.
 """
 from __future__ import annotations
 
-from model import CONSTRAINT_FLAGS
+from model import CONSTRAINT_FLAGS, FOCUS_AREAS
 import advisor
 
 
@@ -35,6 +35,11 @@ def _check(tokens, legal, label: str) -> list:
 def validate_constraints(tokens) -> list:
     """Return the tokens unchanged, or raise TokenError naming the bad one."""
     return _check(tokens, set(CONSTRAINT_FLAGS), "constraint flag")
+
+
+def validate_focus(tokens) -> list:
+    """Return the tokens unchanged, or raise TokenError naming the bad one."""
+    return _check(tokens, set(FOCUS_AREAS), "focus area")
 
 
 def equipment_ids(catalog=None) -> set:
