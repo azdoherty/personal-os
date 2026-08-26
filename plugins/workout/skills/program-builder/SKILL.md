@@ -84,11 +84,16 @@ renders a printable output.
    (e.g. a core day pulls from anti-extension, anti-rotation, flexion, and
    hip-flexor-endurance work, not one exercise repeated for the whole block).
 
-   **Tell the user up front if their arm day will be thin.** True bodyweight
-   bicep isolation barely exists -- a zero-equipment `arms` focus is
-   triceps-only (diamond push-up, pike push-up). The biceps pick (table
-   inverted row) needs a sturdy table; a triceps dip variation needs a
-   chair. If the user hasn't run `equipment-intake`, ask about a chair/table
+   **Tell the user up front if their arm day will be thin.** A
+   zero-equipment `arms` focus gets exactly two exercises: one dedicated
+   triceps pick (Diamond Push-Up) plus one general push movement as filler
+   (Incline Push-Up). There is no bodyweight biceps option at all without a
+   table, so that bucket is simply absent -- and because only two buckets
+   exist, `--minutes` stops changing anything past ~14 minutes for a
+   zero-equipment arm day; there is nothing more to add. True bodyweight
+   bicep isolation barely exists in general: the biceps pick (table inverted
+   row) needs a sturdy table, and a triceps dip variation needs a chair. If
+   the user hasn't run `equipment-intake`, ask about a chair/table
    specifically before promising a well-rounded arm day.
 
 4. **Deliver the output.** For `markdown`, offer to also produce it as an
