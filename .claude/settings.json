@@ -1,0 +1,15 @@
+{
+  "extraKnownMarketplaces": {
+    "personal-os": {
+      "source": {
+        "source": "github",
+        "repo": "azdoherty/personal-os"
+      }
+    }
+  },
+  "enabledPlugins": [
+    "research@personal-os",
+    "workout@personal-os"
+  ]
+}
+
