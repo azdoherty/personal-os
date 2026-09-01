@@ -5,11 +5,18 @@
         "source": "github",
         "repo": "azdoherty/personal-os"
       }
+    },
+    "superpowers-marketplace": {
+      "source": {
+        "source": "github",
+        "repo": "obra/superpowers-marketplace"
+      }
     }
   },
   "enabledPlugins": [
     "research@personal-os",
-    "workout@personal-os"
+    "workout@personal-os",
+    "superpowers@superpowers-marketplace"
   ]
 }
 
