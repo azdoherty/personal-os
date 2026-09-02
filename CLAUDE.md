@@ -4,11 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repository is
 
-`personal-os` is a Claude Code **plugin marketplace** (declared in `.claude-plugin/marketplace.json`) that currently hosts two plugins: `research` at `plugins/research/` and `workout` at `plugins/workout/`. Add new plugins by dropping them under `plugins/` and appending an entry to the marketplace manifest.
+`personal-os` is a Claude Code **plugin marketplace** (declared in `.claude-plugin/marketplace.json`) that currently hosts three plugins: `research` at `plugins/research/` and `workout` at `plugins/workout/`. Add new plugins by dropping them under `plugins/` and appending an entry to the marketplace manifest.
 
 The `research` plugin (v0.6.0, 10 skills) does literature review for purchases, scientific/medical questions, and other "I need to read 50 threads/papers" research tasks. It fans out across Reddit, HN/StackExchange, the open web, and peer-reviewed literature (PubMed, Semantic Scholar, OpenAlex, arXiv), then trust-scores and summarizes.
 
 The `workout` plugin (v0.1.0, 3 skills) builds progressive home-strength programs tailored to the user's equipment and physical constraints. `equipment-intake` records what gear is owned; `program-builder` picks a curated template or falls back to a pool-based generator, applies progression (variation-ladder for bodyweight, double-progression for loaded work), and renders printable markdown/CSV/JSON; `equipment-advisor` ranks equipment gaps and hands off purchase decisions to the `research` plugin's `literature-review` skill. Shared logic lives in `plugins/workout/lib/` (stdlib-only, unit-tested); a local SQLite database (outside the repo) is the system of record, seeded from git-versioned `plugins/workout/references/`.
+
+The `insurance` plugin (v0.1.0, 1 skill) is a stateless renewal helper: its `coverage-review` skill compares home/auto/umbrella/jewelry/life quotes apples-to-apples, judges coverage adequacy against the user's financial exposure and hyperlocal (state/region) factors, flags gaps (life, umbrella, disability), and weighs carrier claims reputation and financial strength — handing off to the `research` plugin for live carrier reputation. Prose + reference files only (no scripts, no stored PII).
 
 ## Common commands
 
@@ -17,6 +19,7 @@ The `workout` plugin (v0.1.0, 3 skills) builds progressive home-strength program
 claude plugin validate .                           # marketplace
 claude plugin validate plugins/research            # plugin
 claude plugin validate plugins/workout            # plugin
+claude plugin validate plugins/insurance            # plugin
 
 # After bumping plugin version
 claude plugin update research@personal-os          # restart Claude Code to apply
