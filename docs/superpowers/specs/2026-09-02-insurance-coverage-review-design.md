@@ -18,6 +18,8 @@ renewal review is thorough and consistent.
 
 - Compare 2+ quotes per line apples-to-apples, surfacing every substantive difference.
 - Judge each line's coverage against the user's actual financial exposure (adequacy), not price alone.
+- Account for hyperlocal factors (state-mandated coverages/minimums, catastrophe exposure and
+  deductibles, local rebuild costs, carrier-availability dynamics) via a live localization phase.
 - Perform a gap analysis: flag missing/under-carried lines (life, umbrella, disability) sized to the profile.
 - Weigh carrier quality (claims reputation, financial strength), not just price.
 - Produce a clear verdict with recommended coverage *targets* and a prioritized action list.
@@ -51,17 +53,27 @@ plugins/insurance/
     SKILL.md
     reference/
       coverage-playbook.md
+      localization.md
       carrier-quality.md
 ```
 
 ### Component responsibilities
 
-- **`SKILL.md`** — trigger + process. Drives the 6-step flow, points to the reference files, lists
+- **`SKILL.md`** — trigger + process. Drives the 7-step flow, points to the reference files, lists
   common mistakes. Kept lean so the frontmatter description triggers reliably and the body doesn't
   duplicate the reference content.
 - **`reference/coverage-playbook.md`** — the per-line knowledge base. One section per line
   (Home / Auto / Umbrella / Jewelry / Life / Other). Each section has three parts: **fields to
-  extract** from a quote, **adequacy target + sizing formula**, and **red flags**.
+  extract** from a quote, **adequacy target + sizing formula**, and **red flags**. Each section also
+  carries a **localize hook** naming which of its targets shift by state/region (e.g. auto minimums
+  and mandatory coverages, home catastrophe deductibles, dwelling rebuild cost).
+- **`reference/localization.md`** — the hyperlocal research playbook. Enumerates the location-driven
+  dimensions to pin down (state-mandated coverages & minimums incl. no-fault/PIP and UM/UIM mandates;
+  catastrophe exposure & special deductibles — hurricane/wind-hail/named-storm, flood zone, wildfire,
+  earthquake, sinkhole; local rebuild cost per square foot; state carrier-availability dynamics such
+  as non-renewals and FAIR/residual-market plans), the queries/sources to use, and how to feed the
+  findings into the adequacy check. Uses the `research` plugin's `web-search` for live local info;
+  state/region tables are **not** hard-coded (they go stale) — they are researched each run.
 - **`reference/carrier-quality.md`** — how to judge a carrier: NAIC complaint index and AM Best
   financial-strength methodology, plus when/how to hand off to the `research` plugin
   (`literature-review` / `brand-check`) for live carrier reputation.
@@ -71,21 +83,30 @@ plugins/insurance/
 1. **Profile (stateless intake).** Ask for, and skip anything already provided: net worth (asset
    breakdown incl. home equity, investments, cash), gross income, dependents, mortgage balance +
    home value, other major assets, and current policies/premiums. Used to size every recommendation.
-2. **Intake quotes.** For each supplied quote, extract the per-line fields from
+   Also capture **location** (state + ZIP/metro) — the trigger for step 2.
+2. **Localize (hyperlocal research).** Per `localization.md`, research the user's state and region:
+   state-mandated coverages & minimum limits (no-fault/PIP, UM/UIM mandates), catastrophe exposure &
+   special deductibles (hurricane/wind-hail/named-storm, flood zone, wildfire, earthquake, sinkhole),
+   local rebuild cost per square foot, and state carrier-availability dynamics. Uses the `research`
+   plugin's `web-search`. Output is a short "local context" note that parameterizes the adequacy
+   check — e.g. "FL: expect a separate hurricane deductible; flood is excluded, needs NFIP/private."
+3. **Intake quotes.** For each supplied quote, extract the per-line fields from
    `coverage-playbook.md` into a markdown comparison table (one column per carrier, one row per
    field). Mark anything unstated as `not specified` — never infer inclusion from a competitor.
    Home + auto are available now; umbrella + jewelry are pending and slotted in when supplied.
-3. **Adequacy check.** Judge each line against the playbook's target/formula: home = replacement cost
-   (+ extended/guaranteed, ordinance-or-law, replacement-cost-not-ACV contents, water backup);
-   auto = 100/300/100 floor, 250/500 with assets, UM/UIM as high as liability; umbrella = net worth +
-   a few years of future income, with underlying-limit requirements; jewelry = schedule items
-   ≥ ~$2k with appraisal / agreed-value; life = DIME or income-replacement, term over whole.
-4. **Carrier quality.** Weigh NAIC complaint index + AM Best per `carrier-quality.md`; hand off to
+4. **Adequacy check.** Judge each line against the playbook's target/formula **as adjusted by the
+   step-2 local context**: home = replacement cost (+ extended/guaranteed, ordinance-or-law,
+   replacement-cost-not-ACV contents, water backup, region-appropriate catastrophe/flood coverage);
+   auto = the greater of the state minimum and the 100/300/100 floor, 250/500 with assets, UM/UIM as
+   high as liability (and any state-mandated PIP); umbrella = net worth + a few years of future
+   income, with underlying-limit requirements; jewelry = schedule items ≥ ~$2k with appraisal /
+   agreed-value; life = DIME or income-replacement, term over whole.
+5. **Carrier quality.** Weigh NAIC complaint index + AM Best per `carrier-quality.md`; hand off to
    the `research` plugin for live reputation on the specific carriers being compared.
-5. **Gap analysis.** Flag missing/under-carried lines sized to the profile — **life** (user has
+6. **Gap analysis.** Flag missing/under-carried lines sized to the profile — **life** (user has
    none), **umbrella**, and **long-term disability** (the commonly-missed income-protection line),
-   plus any other relevant line (e.g. flood) noted in the Other section.
-6. **Verdict.** Apples-to-apples price comparison; where a cheaper quote cuts a real corner; where a
+   plus any other relevant line (e.g. flood/earthquake surfaced in step 2) noted in the Other section.
+7. **Verdict.** Apples-to-apples price comparison; where a cheaper quote cuts a real corner; where a
    pricier quote's premium isn't earned; recommended coverage **targets** per line; a prioritized
    action list. Deliver in chat; offer to save a report only if asked.
 
@@ -122,6 +143,19 @@ roughly 10–15× income.
 than life insurance), and situational lines (flood/earthquake where applicable). Surfaced as
 "insurance to consider carrying," sized qualitatively.
 
+**Localization (hyperlocal)** — insurance is state- and region-specific; adequacy targets must be
+adjusted to location before judging a quote. Dimensions to research live (never hard-coded):
+- **State-mandated coverages & minimums** — required liability minimums, no-fault/PIP states,
+  UM/UIM mandates, and other state-required coverages (compare the state minimum against the
+  100/300/100 floor and take the greater).
+- **Catastrophe exposure & special deductibles** — hurricane / wind-hail / named-storm percentage
+  deductibles, flood zone (flood is excluded from home policies → NFIP/private), wildfire,
+  earthquake (excluded → separate policy), sinkhole; drives which endorsements/separate policies are
+  non-optional in that region.
+- **Local rebuild cost per square foot** — parameterizes the dwelling replacement-cost sanity check.
+- **State carrier-availability dynamics** — non-renewal waves, insurers exiting a state, FAIR/
+  residual-market plans; affects who to shop and whether a cheap quote is durable.
+
 **Carrier quality** — NAIC complaint index (1.0 = industry average; higher = more complaints per
 premium dollar) for claims-service reputation; AM Best rating (A/A+/A++ strong) for financial
 strength / ability to pay claims. A cheap quote from a poor-claims or weak-balance-sheet carrier gets
@@ -134,13 +168,15 @@ Verification is manual:
 
 - `claude plugin validate plugins/insurance` passes.
 - `claude plugin validate .` (marketplace) passes.
-- Dry-run the skill against the user's real Travelers home + auto quotes: confirm it produces the
-  comparison tables, adequacy verdicts, gap analysis (life/umbrella/disability), and an action list,
-  and that it correctly marks unsupplied fields `not specified`.
+- Dry-run the skill against the user's real Travelers home + auto quotes: confirm it runs the
+  localization step for the user's state, produces the comparison tables, adequacy verdicts adjusted
+  for local context, gap analysis (life/umbrella/disability), and an action list, and that it
+  correctly marks unsupplied fields `not specified`.
 
 ## Risks / open questions
 
-- **Regional/temporal drift** in dollar figures (e.g. construction cost/sq-ft, premium examples).
-  Mitigation: the playbook teaches *methods and relative comparison* (compare across the user's own
-  quotes), not fixed external benchmarks — same discipline the roofing skill uses.
+- **Regional/temporal drift** in dollar figures and rules (construction cost/sq-ft, state minimums,
+  catastrophe-deductible norms). Mitigation: the playbook teaches *methods and relative comparison*
+  (compare across the user's own quotes), not fixed external benchmarks, and the localization step
+  researches state/region specifics live rather than baking in stale tables.
 - **Not-advice boundary.** The skill must frame outputs as decision support, not licensed advice.
