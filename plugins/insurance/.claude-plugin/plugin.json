@@ -1,0 +1,6 @@
+{
+  "name": "insurance",
+  "version": "0.1.0",
+  "description": "Insurance renewal helper: compare home/auto/umbrella/jewelry/life quotes apples-to-apples and judge coverage adequacy against your financial exposure, adjusted for hyperlocal (state/region) factors. Flags gaps (life, umbrella, disability), weighs carrier claims reputation and financial strength, and hands off to the research plugin for live carrier reputation. Stateless, no stored PII.",
+  "author": { "name": "azdoh", "email": "your-email@example.com" }
+}
