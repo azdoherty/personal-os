@@ -35,7 +35,7 @@ renewal review is thorough and consistent.
 
 ## Approach (chosen)
 
-**A — one skill + two reference files.** Mirrors the existing `roofing-quote-comparison` skill's
+**A — one skill + three reference files.** Mirrors the existing `roofing-quote-comparison` skill's
 proven prose+reference shape (a process-driven `SKILL.md` plus a domain glossary), scaled from one
 domain to six insurance lines. Rejected alternatives: (B) a multi-skill plugin, which fragments one
 continuous renewal conversation and adds maintenance surface; (C) a monolithic `SKILL.md` with all

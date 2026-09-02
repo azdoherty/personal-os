@@ -79,8 +79,9 @@ relying on the home policy's blanket jewelry sublimit; deductible; agreed-value 
 
 **Adequacy target & formula:**
 - Standard home policies cap **jewelry theft at ~$1,500** (a per-category sublimit). Any single item
-  worth **≥ ~$2,000** should be **scheduled** (floater/endorsement): no deductible, covers accidental
-  loss (e.g. dropped down a drain), requires an **appraisal**.
+  worth **more than that sublimit** (a common scheduling threshold is **~$2,000**) should be
+  **scheduled** (floater/endorsement): no deductible, covers accidental loss (e.g. dropped down a
+  drain), requires an **appraisal**.
 - Heirlooms / hard-to-replace pieces: insure on an **agreed-value** basis.
 
 **Red flags:** valuable jewelry left under the blanket sublimit; no current appraisal; replacement

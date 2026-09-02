@@ -86,8 +86,8 @@ already supplied the information.
 - Comparing premiums without normalizing limits/deductibles (pull each carrier's declarations page).
 - Judging adequacy without the local context — e.g. missing a state-mandated coverage, or a hurricane
   or flood exposure that makes an endorsement/separate policy non-optional.
-- Letting a longer warranty/limit number win without checking what it actually covers (replacement
-  cost vs ACV; manufacturer vs workmanship; per-item vs blanket jewelry sublimit).
+- Letting a bigger limit number win without checking what it actually covers (replacement cost vs
+  ACV; per-item vs blanket jewelry sublimit).
 - Recommending whole life by default (term is the default), or sizing umbrella at a rigid "= net worth".
 - Declaring a winner on price alone when a carrier has a poor NAIC complaint index or weak AM Best rating.
 
