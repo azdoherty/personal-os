@@ -1,5 +1,19 @@
+import json
+import pathlib
+
 import pytest
-from lib.rehab_cost import estimate_project, UnknownProjectTypeError, TierError, total_rehab_cost, render_markdown
+from lib.rehab_cost import (
+    estimate_project, UnknownProjectTypeError, TierError, UnknownLineItemError,
+    total_rehab_cost, render_markdown,
+)
+
+REAL_REFERENCE_PATH = (pathlib.Path(__file__).parent.parent / "references"
+                       / "rehab-costs-nh-seacoast.json")
+
+
+def _load_real_reference():
+    with open(REAL_REFERENCE_PATH, encoding="utf-8") as f:
+        return json.load(f)
 
 TEST_REFERENCE = {
     "bathroom_remodel": {
@@ -42,7 +56,7 @@ def test_sqft_line_item_computed_correctly_single_tier():
 
 def test_each_line_item_with_fixture_count_override():
     est = estimate_project("bathroom_remodel", sqft=50, tier="economy",
-                           fixture_counts={"Toilet": 2}, reference=TEST_REFERENCE)
+                           quantity_overrides={"Toilet": 2}, reference=TEST_REFERENCE)
     toilet = next(li for li in est.line_items if li.name == "Toilet")
     assert toilet.quantity == 2
     assert toilet.subtotal == pytest.approx(2 * (150.0 + 150.0))
@@ -130,3 +144,38 @@ def test_render_markdown_surfaces_warnings():
     result = total_rehab_cost([est])
     md = render_markdown(result)
     assert "year_built unknown" in md
+
+
+def test_every_real_project_type_estimates_without_error():
+    reference = _load_real_reference()
+    # Room-scale (sqft) inputs; kitchen additionally overrides its linear_ft line item.
+    cases = [
+        dict(project_type="bathroom_remodel", sqft=60, tier="economy"),
+        dict(project_type="kitchen_remodel", sqft=150, tier="economy",
+             quantity_overrides={"Cabinets": 20}),
+        dict(project_type="roof_replacement", sqft=1450),
+        dict(project_type="electrical", sqft=2000, year_built=1902),
+    ]
+    for case in cases:
+        est = estimate_project(reference=reference, **case)
+        assert est.total > 0, case["project_type"]
+        assert len(est.line_items) > 0, case["project_type"]
+
+
+def test_kitchen_cabinets_use_override_not_room_sqft():
+    # Regression test for the sqft/linear_ft conflation bug: a 150 sqft kitchen room
+    # with a 20 linear-ft cabinet run must price Cabinets against 20, not 150.
+    reference = _load_real_reference()
+    est = estimate_project("kitchen_remodel", sqft=150, tier="economy",
+                           quantity_overrides={"Cabinets": 20}, reference=reference)
+    cabinets = next(li for li in est.line_items if li.name == "Cabinets")
+    assert cabinets.quantity == 20
+    countertops = next(li for li in est.line_items if li.name == "Countertops")
+    assert countertops.quantity == 150
+
+
+def test_unknown_quantity_override_key_raises():
+    reference = _load_real_reference()
+    with pytest.raises(UnknownLineItemError):
+        estimate_project("bathroom_remodel", sqft=60, tier="economy",
+                         quantity_overrides={"Jacuzzi": 1}, reference=reference)
