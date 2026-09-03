@@ -1,5 +1,5 @@
 import pytest
-from lib.rehab_cost import estimate_project, UnknownProjectTypeError, TierError
+from lib.rehab_cost import estimate_project, UnknownProjectTypeError, TierError, total_rehab_cost, render_markdown
 
 TEST_REFERENCE = {
     "bathroom_remodel": {
@@ -98,3 +98,35 @@ def test_tier_supplied_but_not_allowed_raises():
     with pytest.raises(TierError):
         estimate_project("roof_replacement", sqft=1450, tier="economy",
                          reference=TEST_REFERENCE)
+
+
+def test_total_rehab_cost_sums_multiple_projects():
+    roof = estimate_project("roof_replacement", sqft=1450, reference=TEST_REFERENCE)
+    bath = estimate_project("bathroom_remodel", sqft=50, tier="economy",
+                            reference=TEST_REFERENCE)
+    result = total_rehab_cost([roof, bath])
+    assert result.grand_total == pytest.approx(roof.total + bath.total)
+    assert len(result.projects) == 2
+
+
+def test_total_rehab_cost_empty_list():
+    result = total_rehab_cost([])
+    assert result.grand_total == 0.0
+    assert result.projects == []
+
+
+def test_render_markdown_includes_line_items_and_grand_total():
+    roof = estimate_project("roof_replacement", sqft=1450, reference=TEST_REFERENCE)
+    result = total_rehab_cost([roof])
+    md = render_markdown(result)
+    assert "Roof Replacement" in md
+    assert "Tear-off, underlayment, shingle, flashing" in md
+    assert f"${roof.total:,.2f}" in md
+    assert f"${result.grand_total:,.2f}" in md
+
+
+def test_render_markdown_surfaces_warnings():
+    est = estimate_project("electrical", sqft=2000, year_built=None, reference=TEST_REFERENCE)
+    result = total_rehab_cost([est])
+    md = render_markdown(result)
+    assert "year_built unknown" in md

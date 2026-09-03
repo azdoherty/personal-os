@@ -97,3 +97,30 @@ def estimate_project(project_type: str, sqft: float, reference: dict,
         parts_total=parts_total, labor_total=labor_total,
         total=parts_total + labor_total, warnings=warnings,
     )
+
+
+def total_rehab_cost(estimates: list[ProjectEstimate]) -> RehabTotal:
+    return RehabTotal(projects=estimates, grand_total=sum(e.total for e in estimates))
+
+
+def render_markdown(total: RehabTotal) -> str:
+    lines = ["# Rehab cost estimate", ""]
+    for est in total.projects:
+        tier_label = f" ({est.tier})" if est.tier else ""
+        lines.append(f"## {est.project_type.replace('_', ' ').title()}{tier_label}")
+        lines.append("")
+        lines.append("| Line item | Qty | Parts rate | Labor rate | Subtotal |")
+        lines.append("|---|---|---|---|---|")
+        for li in est.line_items:
+            lines.append(
+                f"| {li.name} | {li.quantity:,.1f} {li.unit} | ${li.parts_rate:,.2f} "
+                f"| ${li.labor_rate:,.2f} | ${li.subtotal:,.2f} |"
+            )
+        lines.append("")
+        lines.append(f"**Project total: ${est.total:,.2f}** "
+                     f"(parts ${est.parts_total:,.2f} + labor ${est.labor_total:,.2f})")
+        for warning in est.warnings:
+            lines.append(f"> ⚠️ {warning}")
+        lines.append("")
+    lines.append(f"## Grand total: ${total.grand_total:,.2f}")
+    return "\n".join(lines)
