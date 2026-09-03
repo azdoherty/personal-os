@@ -139,3 +139,15 @@ counting on group life alone for a need that outlasts the job.
 
 Size these qualitatively (adequate group + supplement to reach a target income-replacement %); the
 goal is to flag the gap and recommend a direction, not to price a policy.
+
+### Out of scope (and why)
+
+- **Health insurance** — the highest-stakes line for most households, but out of scope here: it's
+  usually employer-sponsored or bought through the ACA marketplace on a separate open-enrollment
+  cycle, priced on different mechanics (subsidies, networks, formularies) than the property/casualty
+  and life lines this skill reviews. If the user asks, point them to their employer benefits portal or
+  the marketplace rather than folding it into this comparison.
+- **Long-term care (LTC)** — also out of scope: it's an age- and health-underwritten planning decision
+  (typically weighed in one's 50s–60s against net worth and family situation), not a renewal-cycle
+  quote comparison. Worth a one-line mention if the user's age/assets clearly warrant it, but hand the
+  actual decision to a fee-only planner.
