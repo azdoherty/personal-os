@@ -14,7 +14,7 @@
     },
     {
       "name": "rental",
-      "description": "Analyze local 2-4 unit multifamily listings for long-term rental investment: Redfin CSV ingest, zero-API heuristic screen, RentCast enrichment, and cash-on-cash reporting across price scenarios.",
+      "description": "Analyze local 2-4 unit multifamily listings for long-term rental investment: Redfin CSV ingest, zero-API heuristic screen, RentCast enrichment, and cash-on-cash reporting across price scenarios. Also estimates itemized rehab costs (bathroom/kitchen/roof/electrical) for the NH Seacoast market.",
       "source": "./plugins/rental",
       "category": "productivity"
     }

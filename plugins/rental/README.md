@@ -8,7 +8,7 @@ Analyze local **2–4 unit multifamily** listings for long-term rental investmen
 2. Export your local for-sale search from Redfin ("Download All" → CSV). Filter the Redfin search to "Multi-family (2-4 Unit)".
 3. `/analyze-rentals path/to/redfin.csv` — ingest → heuristic screen → **you prune the shortlist** → RentCast enrichment → markdown + CSV report.
 
-Individual stages are also available: `/ingest-listings`, `/screen-deals`, `/enrich-rents`, `/report`.
+Individual stages are also available: `/ingest-listings`, `/screen-deals`, `/enrich-rents`, `/report`, `/estimate-rehab`.
 
 ## Data sources
 
@@ -25,3 +25,10 @@ Individual stages are also available: `/ingest-listings`, `/screen-deals`, `/enr
 Cash-on-cash, cap rate, and NOI are computed per the standard definitions (capex excluded
 from NOI, subtracted from cash flow as a reserve). See
 `docs/superpowers/specs/2026-07-11-rental-investment-plugin-design.md` for the full model.
+
+## Rehab cost estimates
+
+`/estimate-rehab` prices out itemized renovation work (bathroom/kitchen/roof/electrical,
+parts + labor, economy/luxury tiers) for the NH Seacoast market. Standalone — it doesn't
+write into `report`'s output; re-run `/report` manually if you want a rehab total
+reflected in cash-on-cash.
