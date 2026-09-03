@@ -45,8 +45,9 @@ already supplied the information.
 1. **Profile (ask, don't store).** Collect — and skip anything already given — net worth with an
    asset breakdown (home equity, investments, cash), gross household income, number/ages of
    dependents, mortgage balance + home value, other major assets, and current policies + premiums.
-   Also capture **location: state + ZIP or metro** — this drives step 2. Do not write any of this to
-   disk.
+   Also ask for **recent claims history** (any home/auto claims in the last ~5–7 years) and any
+   **employer group coverage** (life, LTD/STD, health) — both change the analysis later. Capture
+   **location: state + ZIP or metro** — this drives step 2. Do not write any of this to disk.
 
 2. **Localize (hyperlocal research).** Follow `reference/localization.md`. Research the user's state
    and region for: state-mandated coverages & minimum limits (no-fault/PIP, UM/UIM mandates),
@@ -55,10 +56,14 @@ already supplied the information.
    Prefer the `research` plugin's `web-search` skill; fall back to `WebSearch`. Produce a short
    **local context note** that parameterizes the adequacy check.
 
-3. **Intake quotes.** For each quote (PDF/text/photo), extract the per-line fields listed in
+3. **Intake quotes.** For each quote, use `Read` on the file — it handles PDFs (read all pages) and
+   photos. For a scan or photo where a number is illegible or ambiguous, do not guess: ask the user to
+   confirm it before it feeds a sizing formula. Extract the per-line fields listed in
    `reference/coverage-playbook.md` into a markdown comparison table — one column per carrier, one
    row per field. Mark anything not stated as `not specified`; never infer inclusion because a
    competitor included it. Home + auto may be present now; add umbrella/jewelry columns when supplied.
+   For a **line whose quote hasn't arrived yet** (e.g. umbrella, jewelry), still compute its adequacy
+   **target** in step 4 so the user has a number to judge the pending quote against when it lands.
 
 4. **Adequacy check.** Judge each line against the target/formula in `reference/coverage-playbook.md`,
    **adjusted by the step-2 local context** (e.g. auto liability = the greater of the state minimum
@@ -77,8 +82,12 @@ already supplied the information.
 
 7. **Verdict.** Deliver in chat: the apples-to-apples price comparison, where a cheaper quote cuts a
    real corner, where a pricier quote's premium isn't earned, recommended coverage **targets** per
-   line, and a prioritized action list. Note the not-advice framing. Offer to save a report file
-   only if the user asks.
+   line, and a prioritized action list. Compare **total household cost of bundling** (home + auto,
+   sometimes umbrella, with one carrier) against cherry-picking the cheapest quote per line — bundling
+   discounts run ~5–25%, so the per-line-cheapest set can cost more once the discount is lost. If the
+   profile shows recent claims, note that a renewal hike may be claims-driven, and that any recommended
+   switch will trigger a new carrier's CLUE-report pull (which can reprice or decline). Note the
+   not-advice framing. Offer to save a report file only if the user asks.
 
 ## Common Mistakes
 

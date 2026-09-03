@@ -10,27 +10,34 @@ own profile and quotes, not to fixed external numbers.
 
 ## Home
 
-**Extract:** carrier, premium, dwelling (Coverage A) limit, other structures (B), personal property
-(C) limit **and whether replacement cost or ACV**, loss-of-use (D), personal liability (E), medical
-payments (F), deductible(s) incl. any separate wind/hail/hurricane %, extended/guaranteed replacement
-cost, ordinance-or-law %, water/sewer backup, service line, and any catastrophe endorsements or
-exclusions (flood, earthquake).
+**Extract:** carrier, premium, **policy form (HO-3 named-peril vs HO-5 open-peril)**, dwelling
+(Coverage A) limit, other structures (B), personal property (C) limit **and whether replacement cost
+or ACV**, loss-of-use (D), personal liability (E), medical payments (F), deductible(s) incl. any
+separate wind/hail/hurricane %, **any roof-payout schedule (ACV/depreciation by roof age)**,
+extended/guaranteed replacement cost, ordinance-or-law %, water/sewer backup, service line, and any
+catastrophe endorsements or exclusions (flood, earthquake).
 
 **Adequacy target & formula:**
 - Dwelling (A) = **replacement cost** (full rebuild), NOT market value or loan balance. Sanity-check:
   living area sq-ft × local rebuild cost/sq-ft (from `localization.md`).
+- **Form type:** HO-5 (open-peril on contents too) is broader than HO-3; two quotes with identical
+  limits aren't equivalent if one is HO-3 and the other HO-5.
 - Add **extended replacement cost** (+25–50% buffer over A) and **guaranteed replacement cost** if
   the carrier offers it.
 - **Ordinance-or-law**: default ~10% of A is thin for older homes; bump to 25–50% if the home is
   older or local codes have changed.
 - Personal property (C) on **replacement cost, not ACV**.
-- Add **water/sewer backup** endorsement.
+- **Roof:** watch for a roof-payout schedule that depreciates roof claims by age — it can gut a roof
+  claim even when Coverage A is replacement cost.
+- Add **water/sewer backup** and, if offered, **service-line** coverage (buried water/sewer/electrical
+  lines from the street) — both are cheap endorsements for commonly-uncovered losses.
 - Liability (E) ≥ **$300,000** so it can sit under an umbrella; higher if assets warrant.
 - Loss-of-use (D) adequate for local rebuild timelines.
 
-**Red flags:** dwelling set to market/loan value; personal property on ACV; no extended replacement
-cost; ordinance-or-law left at the ~10% default on an older home; missing water backup; liability
-below $300k; a low premium achieved via a much higher deductible than the user carries today.
+**Red flags:** dwelling set to market/loan value; personal property on ACV; an HO-3 quietly priced
+against an HO-5 competitor; a roof-age ACV schedule; no extended replacement cost; ordinance-or-law
+left at the ~10% default on an older home; missing water backup; liability below $300k; a low premium
+achieved via a much higher deductible than the user carries today.
 
 **Localize hook:** rebuild cost/sq-ft, hurricane/wind-hail/named-storm % deductibles, and whether
 flood/earthquake are excluded (they usually are) all come from `localization.md`.
@@ -48,27 +55,34 @@ deductibles, and any rental/roadside/gap coverage.
 - **UM/UIM** treated as mandatory (≈1 in 7 drivers uninsured); set as high as liability.
 - Include any **state-mandated PIP / no-fault** coverage (from `localization.md`).
 - Deductibles (comp/collision) are the premium lever — raise only to what the user can pay out of pocket.
+- **Gap coverage** matters on a financed or leased vehicle with negative equity (loan balance > ACV):
+  without it, a total-loss payout can leave the user owing on a car they no longer have.
 
 **Red flags:** liability at state minimum when assets are substantial; UM/UIM missing or far below
 liability; a premium gap explained entirely by a higher deductible; dropping comp/collision on a car
-still worth insuring.
+still worth insuring; no gap coverage on an underwater loan/lease.
 
 **Localize hook:** state minimum limits, no-fault/PIP requirement, and UM/UIM mandate come from
 `localization.md`.
 
 ## Umbrella
 
-**Extract:** carrier, premium, umbrella limit, and the **underlying limits it requires** on home and
-auto.
+**Extract:** carrier, premium, umbrella limit, the **underlying limits it requires** on home and
+auto, and **whether it includes excess UM/UIM** (uninsured/underinsured motorist).
 
 **Adequacy target & formula:**
 - Size to **net worth + a few years of future income** (covers both asset seizure and wage
   garnishment), not a rigid "= net worth". Sold in **$1M increments** (~$150–300 per $1M per year).
 - Requires underlying limits first: typically **$300k home liability** and **250/500 auto**. Confirm
   the home/auto quotes meet these before recommending an umbrella.
+- **Excess UM/UIM ("follow-form"):** a standard umbrella covers liability *you* cause, but often does
+  **not** extend the auto policy's UM/UIM (injuries *to you* from an under/uninsured driver) unless an
+  excess-UM/UIM endorsement is added — many carriers exclude it by default. Don't call an umbrella
+  "adequate" on limits alone; check whether this endorsement is present or available.
 
 **Red flags:** recommending umbrella before underlying limits are raised to qualify; sizing far below
-net worth + income exposure; ignoring wage-garnishment exposure for a high earner.
+net worth + income exposure; ignoring wage-garnishment exposure for a high earner; assuming the
+umbrella extends UM/UIM when it carries no excess-UM/UIM endorsement.
 
 **Localize hook:** none material beyond the underlying auto/home minimums.
 
@@ -101,9 +115,15 @@ premium, and any cash-value component.
 - Size via **DIME**: **D**ebt (non-mortgage) + final expenses, **I**ncome × years of support needed,
   **M**ortgage payoff, **E**ducation (~+$100k per child). Cross-check against income-replacement
   (annual income ÷ 4–5%) and the 10–15× income rule of thumb.
+- **Net out existing coverage:** subtract any employer **group life** (and other in-force policies)
+  from the DIME target — but note group life is usually 1–2× salary, rarely portable if the user
+  leaves the job, so it's a partial, fragile offset, not a substitute for individual term.
+- **Compare like with like:** two "20-yr $500k term" quotes aren't equivalent if one is fully
+  medically underwritten and the other simplified/guaranteed-issue — that difference drives the premium.
 
 **Red flags:** no coverage while others depend on the user's income (a mortgage + dependents is the
-classic gap); whole life sold as an "investment"; term length shorter than the years of dependency.
+classic gap); whole life sold as an "investment"; term length shorter than the years of dependency;
+counting on group life alone for a need that outlasts the job.
 
 **Localize hook:** none material.
 

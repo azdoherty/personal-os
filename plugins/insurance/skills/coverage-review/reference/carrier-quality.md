@@ -35,3 +35,15 @@ current reputation:
   claims complaints, **say so explicitly** and let the user weigh it.
 - If the incumbent (e.g. Travelers) is being compared against a cheaper challenger, note the switching
   trade-off: potential savings vs claims-service and stability track record.
+
+## Claims history / CLUE — the switching-risk factor
+
+Prior claims are the most common reason a renewal premium jumps with no coverage change, and they
+follow the user, not the policy:
+
+- A **CLUE report** (Comprehensive Loss Underwriting Exchange) records ~5–7 years of home/auto claims.
+  Any carrier the user shops **will pull it** and may reprice — or decline — based on what's there.
+- So a cheaper challenger quote is only real if it survives underwriting: flag that a switch triggers
+  a fresh CLUE pull, and that a low quote can rise or fall away once claims history is factored in.
+- If the incumbent's renewal spiked, check whether recent claims (not just market conditions) explain
+  it before assuming a competitor will do better — the same claims hit the competitor's underwriting.
