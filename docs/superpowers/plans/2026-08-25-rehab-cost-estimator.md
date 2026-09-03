@@ -505,7 +505,7 @@ Note: for `"linear_ft"`-unit line items (cabinets), the caller passes the cabine
 - [ ] **Step 5: Run tests to verify they pass**
 
 Run: `cd plugins/rental && python -m pytest tests/test_rehab_cost.py -v`
-Expected: PASS (8 passed).
+Expected: PASS (9 passed).
 
 - [ ] **Step 6: Commit**
 
@@ -606,7 +606,7 @@ def render_markdown(total: RehabTotal) -> str:
 - [ ] **Step 4: Run tests to verify they pass**
 
 Run: `cd plugins/rental && python -m pytest tests/test_rehab_cost.py -v`
-Expected: PASS (12 passed).
+Expected: PASS (13 passed).
 
 - [ ] **Step 5: Commit**
 
@@ -798,7 +798,7 @@ git commit -m "feat(rental): add estimate-rehab skill"
 - [ ] **Step 1: Run the full plugin test suite**
 
 Run: `cd plugins/rental && python -m pytest -v`
-Expected: all tests pass (38 pre-existing + 4 from Task 1 + 12 from Tasks 2-3 = 54 total; exact count may vary slightly, but there must be zero failures and pristine output).
+Expected: all tests pass (38 pre-existing + 4 from Task 1 + 13 from Tasks 2-3 = 55 total; exact count may vary slightly, but there must be zero failures and pristine output).
 
 - [ ] **Step 2: Attempt manifest validation**
 
