@@ -3,7 +3,7 @@
 estimates using the NH Seacoast reference data, and print a markdown report.
 
 Each project spec: {"project_type": str, "sqft": float, "tier": str|omit,
-"fixture_counts": dict|omit, "year_built": int|omit}.
+"quantity_overrides": dict|omit, "year_built": int|omit}.
 """
 import json
 import os
@@ -21,7 +21,7 @@ if hasattr(sys.stderr, "reconfigure"):
 
 from lib.rehab_cost import (
     estimate_project, total_rehab_cost, render_markdown,
-    UnknownProjectTypeError, TierError,
+    UnknownProjectTypeError, TierError, UnknownLineItemError,
 )
 
 REFERENCE_PATH = os.path.join(_PLUGIN_ROOT, "references", "rehab-costs-nh-seacoast.json")
@@ -40,11 +40,14 @@ def main() -> int:
                 sqft=spec["sqft"],
                 reference=reference,
                 tier=spec.get("tier"),
-                fixture_counts=spec.get("fixture_counts"),
+                quantity_overrides=spec.get("quantity_overrides"),
                 year_built=spec.get("year_built"),
             ))
-        except (UnknownProjectTypeError, TierError) as e:
+        except (UnknownProjectTypeError, TierError, UnknownLineItemError) as e:
             print(f"error: {e}", file=sys.stderr)
+            return 2
+        except (KeyError, TypeError) as e:
+            print(f"error: malformed project spec {spec!r}: {e}", file=sys.stderr)
             return 2
 
     result = total_rehab_cost(estimates)

@@ -32,16 +32,31 @@ Each project spec:
 - `project_type` (required): one of `bathroom_remodel`, `kitchen_remodel` (both require
   `tier`), `roof_replacement`, `electrical` (neither takes `tier`).
 - `sqft` (required): the room's or building's relevant square footage. For
-  `kitchen_remodel`'s `Cabinets` line item this is actually cabinet run length in linear
-  feet, not room floor area -- pass the linear-foot number as `sqft` for that project.
+  `roof_replacement`, this means roof-deck area (the actual surface being torn off and
+  reshingled), not living square footage -- a pitched roof's deck area typically runs
+  15-40% larger than the building's living-area footprint, so passing living sqft will
+  under-estimate the job. `kitchen_remodel` uses `sqft` as room floor area (drives Demo &
+  prep, Countertops, Flooring, Backsplash); its `Cabinets` line item is priced per linear
+  foot of cabinet run instead and must be supplied separately via `quantity_overrides`
+  (see below), since cabinet run length and room floor area are different numbers.
 - `tier` (required for bathroom/kitchen, omit for roof/electrical): `"economy"` or
   `"luxury"`.
-- `fixture_counts` (optional): `{"Toilet": 2}` to override the default count of 1 for an
-  `each`-unit line item. Line item names must match the reference file exactly (see
-  `references/rehab-costs-nh-seacoast.json`).
+- `quantity_overrides` (optional): `{"Line item name": number}` to override the default
+  quantity for ANY line item, not just `"each"`-unit fixtures -- it works uniformly across
+  `sqft`, `linear_ft`, and `each` units. This is how you supply cabinet linear footage
+  separately from kitchen room square footage, e.g. `{"Cabinets": 22}` alongside
+  `"sqft": 180` (the room's floor area, used for Countertops/Flooring/Backsplash/Demo).
+  It's also how you override a fixture count, e.g. `{"Toilet": 2}`, or bump up a
+  multi-unit building's panel count (see the `electrical` note below). Line item names
+  must match the reference file exactly (see `references/rehab-costs-nh-seacoast.json`);
+  an unrecognized name raises an error rather than being silently ignored.
 - `year_built` (optional but recommended for `electrical`): triggers the knob-and-tube
   removal line item for properties built before 1960. If omitted, that cost is excluded
   and the output carries an explicit warning rather than guessing.
+- `electrical`'s `"Panel upgrade (200A)"` line item defaults to quantity 1 regardless of
+  building size -- a 2-4 unit multifamily may need more than one panel. Use
+  `quantity_overrides: {"Panel upgrade (200A)": 2}` (or the appropriate count) when that
+  applies.
 
 ## Output
 
