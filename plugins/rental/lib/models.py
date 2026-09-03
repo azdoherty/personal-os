@@ -91,3 +91,32 @@ class DealResult:
             "rank_metric": self.rank_metric,
             "notes": self.notes,
         }
+
+
+@dataclass
+class LineItemCost:
+    name: str
+    unit: str
+    quantity: float
+    parts_rate: float
+    labor_rate: float
+    parts_subtotal: float
+    labor_subtotal: float
+    subtotal: float
+
+
+@dataclass
+class ProjectEstimate:
+    project_type: str
+    tier: str | None
+    line_items: list[LineItemCost]
+    parts_total: float
+    labor_total: float
+    total: float
+    warnings: list[str] = field(default_factory=list)
+
+
+@dataclass
+class RehabTotal:
+    projects: list[ProjectEstimate]
+    grand_total: float
