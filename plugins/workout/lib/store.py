@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS exercises (
     exercise_id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     movement_pattern TEXT NOT NULL,
+    sub_category TEXT,
     equipment_required TEXT NOT NULL,
     constraint_flags TEXT NOT NULL,
     ladder_group TEXT,
@@ -132,8 +133,29 @@ def _seed_if_empty(conn: sqlite3.Connection) -> None:
         seed.seed_all(conn)
 
 
+def _ensure_sub_category_column(conn: sqlite3.Connection) -> None:
+    """Add `exercises.sub_category` to a database created before focus mode.
+
+    `CREATE TABLE IF NOT EXISTS` is a no-op against a table that already
+    exists, so a store built by an earlier version of this plugin would keep
+    the old column list forever while `seed.seed_exercises` unconditionally
+    INSERTs the new column -- an `OperationalError` on `--reseed`, and (when
+    the stale `exercises` table happens to be empty) inside `connect()`
+    itself via `_seed_if_empty`, breaking every command that opens the DB.
+
+    Deliberately a targeted `ALTER TABLE`, not a migration framework: this is
+    the plugin's first schema change, and the column is nullable so the ALTER
+    is safe on a populated table. Adding it here rather than in `connect()`
+    keeps it ahead of every seeding path, including `intake.py --reseed`.
+    """
+    columns = {row[1] for row in conn.execute("PRAGMA table_info(exercises)").fetchall()}
+    if "sub_category" not in columns:
+        conn.execute("ALTER TABLE exercises ADD COLUMN sub_category TEXT")
+
+
 def init_db(conn: sqlite3.Connection) -> None:
     conn.executescript(SCHEMA)
+    _ensure_sub_category_column(conn)
     conn.commit()
 
 

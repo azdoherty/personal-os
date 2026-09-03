@@ -8,5 +8,6 @@
   {"equipment_id": "barbell", "name": "Barbell + Plates", "cost_tier": "medium", "space_tier": "medium", "approx_cost_usd": 300, "notes": "Enables the heaviest loaded squat/hinge work; grip- and spine-loading."},
   {"equipment_id": "rack", "name": "Squat Rack", "cost_tier": "high", "space_tier": "large", "approx_cost_usd": 400, "notes": "Needed to safely rack/unrack a loaded barbell squat."},
   {"equipment_id": "sturdy_table", "name": "Sturdy Table (for inverted rows)", "cost_tier": "none", "space_tier": "none", "approx_cost_usd": 0, "notes": "Most households already have one; the free way to train the pull pattern with no other equipment."},
+  {"equipment_id": "chair", "name": "Sturdy Chair", "cost_tier": "none", "space_tier": "none", "approx_cost_usd": 0, "notes": "Most households already have one; unlocks chair dips for triceps-focused arm work."},
   {"equipment_id": "bench", "name": "Adjustable Bench", "cost_tier": "medium", "space_tier": "medium", "approx_cost_usd": 150, "notes": "Upgrades floor pressing to a full-range bench press."}
 ]

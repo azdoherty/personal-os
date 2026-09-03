@@ -63,6 +63,7 @@ def apply_variation_ladder(exercise_cfg: dict, week_number: int, ladder: list) -
         "reps": rung["default_reps"],
         "load_type": "bodyweight",
         "load_value": None,
+        "notes": rung.get("notes", ""),
     }
 
 

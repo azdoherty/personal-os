@@ -1,7 +1,28 @@
+import sqlite3
+
 import pytest
 
 from model import Program, ProgramMeta, Progression, Week, Session, ProgramExercise, LoadSpec
 import store
+
+
+# The `exercises` table exactly as it shipped before focus mode added
+# `sub_category` -- i.e. what a user's existing workout.db still holds after
+# they update the plugin. Kept as a literal, not derived from store.SCHEMA, so
+# it stays a fixed historical record.
+PRE_FOCUS_EXERCISES_SCHEMA = """
+CREATE TABLE exercises (
+    exercise_id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    movement_pattern TEXT NOT NULL,
+    equipment_required TEXT NOT NULL,
+    constraint_flags TEXT NOT NULL,
+    ladder_group TEXT,
+    ladder_rank INTEGER,
+    default_reps TEXT NOT NULL,
+    notes TEXT NOT NULL DEFAULT ''
+)
+"""
 
 
 def _tiny_program():
@@ -72,6 +93,53 @@ def test_connect_auto_seeds_reference_tables_on_a_fresh_database():
     assert exercise_count >= 20
     assert catalog_count >= 5
     assert source_count >= 5
+
+
+def test_init_db_adds_sub_category_to_a_pre_focus_mode_database():
+    # CREATE TABLE IF NOT EXISTS is a no-op against an existing table, so
+    # without a migration this database would never gain the column.
+    conn = sqlite3.connect(":memory:")
+    conn.execute(PRE_FOCUS_EXERCISES_SCHEMA)
+    assert "sub_category" not in {
+        r[1] for r in conn.execute("PRAGMA table_info(exercises)").fetchall()
+    }
+
+    store.init_db(conn)
+
+    assert "sub_category" in {
+        r[1] for r in conn.execute("PRAGMA table_info(exercises)").fetchall()
+    }
+    # and it is actually usable, not just listed
+    assert conn.execute("SELECT sub_category FROM exercises").fetchall() == []
+
+
+def test_reseeding_a_pre_focus_mode_database_succeeds_and_populates_sub_category():
+    # The reported failure: `intake.py --reseed` against a store created by an
+    # earlier plugin version died with
+    # "OperationalError: table exercises has no column named sub_category".
+    import seed
+
+    conn = sqlite3.connect(":memory:")
+    conn.execute(PRE_FOCUS_EXERCISES_SCHEMA)
+    store.init_db(conn)
+
+    counts = seed.seed_all(conn)
+
+    assert counts["exercises"] >= 20
+    tagged = conn.execute(
+        "SELECT exercise_id, sub_category FROM exercises WHERE sub_category IS NOT NULL "
+        "ORDER BY exercise_id"
+    ).fetchall()
+    assert len(tagged) >= 10
+    assert ("diamond_pushup", "triceps") in tagged
+
+
+def test_sub_category_migration_is_a_no_op_on_a_fresh_database():
+    conn = store.connect(":memory:")
+    store.init_db(conn)  # re-running must not raise "duplicate column name"
+    assert "sub_category" in {
+        r[1] for r in conn.execute("PRAGMA table_info(exercises)").fetchall()
+    }
 
 
 def test_connect_does_not_reseed_an_already_seeded_database():

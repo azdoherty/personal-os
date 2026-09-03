@@ -40,6 +40,19 @@ def group_by_pattern(exercises: list) -> dict:
     return grouped
 
 
+def bucket_by_sub_category(exercises: list) -> dict:
+    """Group exercises by `sub_category`, falling back to `movement_pattern`
+    when the field is absent or falsy. Used by focus-mode session composition
+    to find distinct exercise varieties within a focus -- e.g. core's four
+    sub-categories, or legs' squat/hinge patterns acting as their own
+    buckets since they were never given a finer tag."""
+    buckets: dict = {}
+    for e in exercises:
+        key = e.get("sub_category") or e["movement_pattern"]
+        buckets.setdefault(key, []).append(e)
+    return buckets
+
+
 def ladder_for_group(exercises: list, ladder_group: str) -> list:
     """Return the exercises in a ladder group, ordered easiest -> hardest."""
     rungs = [e for e in exercises if e.get("ladder_group") == ladder_group]
