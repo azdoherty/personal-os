@@ -502,6 +502,15 @@ def estimate_project(project_type: str, sqft: float, reference: dict,
 
 Note: for `"linear_ft"`-unit line items (cabinets), the caller passes the cabinet run length as the `sqft` parameter — there's a single scalar "size" input per project, reused for whichever unit the project type's sqft-like line items declare. This keeps the function signature simple (one size parameter, not one per possible unit) since no project type mixes `sqft` and `linear_ft` line items together.
 
+> **Post-implementation correction (final whole-branch review):** this claim was factually
+> wrong. `kitchen_remodel` DOES mix `"sqft"` (Demo & prep, Countertops, Flooring,
+> Backsplash — four different areas) and `"linear_ft"` (Cabinets) line items in the same
+> project type, and reusing one scalar `sqft` for both produced a confirmed 4.3x spread in
+> the total kitchen cost depending on which number was passed. This was fixed by
+> generalizing `fixture_counts` into a full per-line-item `quantity_overrides` parameter
+> that can supply a distinct quantity for any line item (e.g. `{"Cabinets": 22}`) while
+> `sqft` continues to drive the rest.
+
 - [ ] **Step 5: Run tests to verify they pass**
 
 Run: `cd plugins/rental && python -m pytest tests/test_rehab_cost.py -v`
@@ -837,11 +846,16 @@ echo '[
 ```
 Expected: markdown with two project sections (`Bathroom Remodel (economy)` and
 `Electrical`), the electrical section including a `Knob-and-tube removal` row (since
-1902 < 1960) with no warning, and a grand total in the neighborhood of $90,000-$95,000
-(bathroom ~$6,200 + electrical ~$87,000 for a 4,358 sqft century-old building's full
-rewire-plus-knob-and-tube-removal -- a large number, and a genuinely useful signal that
-this specific property's electrical scope is a major cost driver, not a bug in the
-estimate). No traceback.
+1902 < 1960) with no warning, and a grand total of **$96,838.00** (bathroom ~$6,200 +
+electrical ~$90,600 for a 4,358 sqft century-old building's full rewire-plus-knob-and-
+tube-removal, including the Panel upgrade line item -- a large number, and a genuinely
+useful signal that this specific property's electrical scope is a major cost driver, not
+a bug in the estimate). No traceback.
+
+> **Post-implementation correction (final whole-branch review):** the original
+> "$90,000-$95,000" range omitted the `electrical` project's "Panel upgrade" line item
+> from the estimate when this range was calculated. The verified, actual grand total for
+> this exact input is $96,838.00.
 
 - [ ] **Step 6: Commit**
 
