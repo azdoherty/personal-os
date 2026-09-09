@@ -1,0 +1,6 @@
+{
+  "name": "workout",
+  "version": "0.1.0",
+  "description": "Progressive home-strength programs tailored to your equipment and physical constraints: curated templates plus a generator/remix engine, an equipment gap advisor with research-plugin handoff, local SQLite storage, and printable markdown/CSV/artifact outputs.",
+  "author": { "name": "azdoh", "email": "your-email@example.com" }
+}

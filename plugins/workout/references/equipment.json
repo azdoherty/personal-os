@@ -1,0 +1,12 @@
+[
+  {"equipment_id": "dumbbell", "name": "Adjustable Dumbbells (pair)", "cost_tier": "medium", "space_tier": "small", "approx_cost_usd": 250, "notes": "The single highest-value first purchase; unlocks squat, hinge, push, pull, and carry patterns."},
+  {"equipment_id": "resistance_band", "name": "Resistance Band Set", "cost_tier": "low", "space_tier": "small", "approx_cost_usd": 30, "notes": "Cheap assistance for pull-up progressions."},
+  {"equipment_id": "pull_up_bar", "name": "Doorway Pull-Up Bar", "cost_tier": "low", "space_tier": "small", "approx_cost_usd": 30, "notes": "Needed alongside a resistance band for assisted pull-ups."},
+  {"equipment_id": "weighted_vest", "name": "Weighted Vest (20-40 lb)", "cost_tier": "medium", "space_tier": "small", "approx_cost_usd": 100, "notes": "Loads squat-pattern work with zero grip or arm involvement -- useful when avoiding grip/arm-load."},
+  {"equipment_id": "sled", "name": "Drag Sled / Loaded Tire Rig", "cost_tier": "low", "space_tier": "medium", "approx_cost_usd": 40, "notes": "Heavy leg work pulled from a hip harness -- arm-free."},
+  {"equipment_id": "belt_squat_rig", "name": "Belt Squat Machine", "cost_tier": "high", "space_tier": "large", "approx_cost_usd": 800, "notes": "Heaviest arm-free squat option; a big-ticket item."},
+  {"equipment_id": "barbell", "name": "Barbell + Plates", "cost_tier": "medium", "space_tier": "medium", "approx_cost_usd": 300, "notes": "Enables the heaviest loaded squat/hinge work; grip- and spine-loading."},
+  {"equipment_id": "rack", "name": "Squat Rack", "cost_tier": "high", "space_tier": "large", "approx_cost_usd": 400, "notes": "Needed to safely rack/unrack a loaded barbell squat."},
+  {"equipment_id": "sturdy_table", "name": "Sturdy Table (for inverted rows)", "cost_tier": "none", "space_tier": "none", "approx_cost_usd": 0, "notes": "Most households already have one; the free way to train the pull pattern with no other equipment."},
+  {"equipment_id": "bench", "name": "Adjustable Bench", "cost_tier": "medium", "space_tier": "medium", "approx_cost_usd": 150, "notes": "Upgrades floor pressing to a full-range bench press."}
+]

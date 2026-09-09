@@ -4,9 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repository is
 
-`personal-os` is a Claude Code **plugin marketplace** (declared in `.claude-plugin/marketplace.json`) that currently hosts two plugins: `research` at `plugins/research/` and `rental` at `plugins/rental/`. Add new plugins by dropping them under `plugins/` and appending an entry to the marketplace manifest.
+`personal-os` is a Claude Code **plugin marketplace** (declared in `.claude-plugin/marketplace.json`) that currently hosts four plugins: `research` at `plugins/research/`, `workout` at `plugins/workout/`, `insurance` at `plugins/insurance/`, and `rental` at `plugins/rental/`. Add new plugins by dropping them under `plugins/` and appending an entry to the marketplace manifest.
 
-The `research` plugin (v0.5.0, 9 skills) does literature review for purchases, scientific/medical questions, and other "I need to read 50 threads/papers" research tasks. It fans out across Reddit, HN/StackExchange, the open web, and peer-reviewed literature (PubMed, Semantic Scholar, OpenAlex, arXiv), then trust-scores and summarizes.
+The `research` plugin (v0.6.0, 10 skills) does literature review for purchases, scientific/medical questions, and other "I need to read 50 threads/papers" research tasks. It fans out across Reddit, HN/StackExchange, the open web, and peer-reviewed literature (PubMed, Semantic Scholar, OpenAlex, arXiv), then trust-scores and summarizes.
+
+The `workout` plugin (v0.1.0, 3 skills) builds progressive home-strength programs tailored to the user's equipment and physical constraints. `equipment-intake` records what gear is owned; `program-builder` picks a curated template or falls back to a pool-based generator, applies progression (variation-ladder for bodyweight, double-progression for loaded work), and renders printable markdown/CSV/JSON; `equipment-advisor` ranks equipment gaps and hands off purchase decisions to the `research` plugin's `literature-review` skill. Shared logic lives in `plugins/workout/lib/` (stdlib-only, unit-tested); a local SQLite database (outside the repo) is the system of record, seeded from git-versioned `plugins/workout/references/`.
+
+The `insurance` plugin (v0.1.0, 1 skill) is a stateless renewal helper: its `coverage-review` skill compares home/auto/umbrella/jewelry/life quotes apples-to-apples, judges coverage adequacy against the user's financial exposure and hyperlocal (state/region) factors, flags gaps (life, umbrella, disability), and weighs carrier claims reputation and financial strength — handing off to the `research` plugin for live carrier reputation. Prose + reference files only (no scripts, no stored PII).
 
 The `rental` plugin (v0.2.0, 7 skills) analyzes local 2–4 unit multifamily listings for long-term rental investment: it ingests a Redfin CSV export, screens with a zero-API rent heuristic, pauses for human pruning, enriches the shortlist via RentCast, and reports cash-on-cash returns across price scenarios. It also estimates itemized rehab costs (bathroom/kitchen/roof/electrical, parts+labor, NH Seacoast-specific) via `estimate-rehab`. Shared logic lives in `plugins/rental/lib/` (stdlib-only, unit-tested); skills are thin CLI wrappers. Config (with the RentCast key) lives in the OS config dir, never the repo.
 
@@ -16,6 +20,8 @@ The `rental` plugin (v0.2.0, 7 skills) analyzes local 2–4 unit multifamily lis
 # Validate manifests after any change
 claude plugin validate .                           # marketplace
 claude plugin validate plugins/research            # plugin
+claude plugin validate plugins/workout             # plugin
+claude plugin validate plugins/insurance           # plugin
 claude plugin validate plugins/rental              # plugin
 
 # After bumping plugin version
@@ -32,6 +38,14 @@ python3 plugins/research/skills/academic-search/scripts/search.py "vitamin D def
 python3 plugins/research/skills/brand-check/scripts/brand_check.py "Auravex" --reviewer-hits 3 --integrity-hits 0 --keywords "therapy,light"
 cat sources.json | python3 plugins/research/skills/source-trust/scripts/score.py
 
+# Workout plugin -- run the test suite
+cd plugins/workout && python -m pytest lib/tests -v
+
+# Workout plugin pipeline: intake -> build -> advise
+python plugins/workout/skills/equipment-intake/scripts/intake.py --set dumbbell,pull_up_bar
+python plugins/workout/skills/program-builder/scripts/build.py --level beginner --days 3 --minutes 30 --equipment dumbbell,pull_up_bar --format markdown --out program.md
+python plugins/workout/skills/equipment-advisor/scripts/advise.py --owned dumbbell,pull_up_bar
+
 # Rental plugin — run the test suite
 cd plugins/rental && python -m pytest -v
 
@@ -39,7 +53,7 @@ cd plugins/rental && python -m pytest -v
 python plugins/rental/skills/ingest-listings/scripts/ingest.py redfin.csv > props.json
 ```
 
-There are no automated tests yet — verification happens by running the scripts directly against live APIs.
+The `research` plugin has no automated tests yet -- verification happens by running the scripts directly against live APIs. The `workout` plugin's `lib/` has a full pytest suite (`cd plugins/workout && python -m pytest lib/tests -v`). The `rental` plugin also has a full pytest suite (`cd plugins/rental && python -m pytest -v`).
 
 ## Architecture
 
@@ -61,6 +75,7 @@ The plugin is organized in three layers — read SKILL.md files in this order to
    - `brand-check` — 5-signal brand legitimacy: Reddit organic, independent reviewer hits (passed in from WebSearch), website footprint (with Shopify/Squarespace/parked-domain detection), domain age via RDAP, and integrity history (auto-detected from a local CPSC recall corpus + manual WebSearch hits)
    - `review-pattern` — listing-level review authenticity (rating skew, template language, n-gram duplicates, burst posting, etc.)
    - `source-trust` — combines `domain-prior × recency × brand-legitimacy + engagement + corroboration + study-type-bonus` into a 0–100 trust score
+   - `medical-evidence` — for health questions: enumerates the full solution space (clinical/procedural/community/adjacent lanes), decomposes into atomic claims, and grades each via `grade_claim.py` on three independent axes (evidence 1-5, risk/cost, community frequency) with an `absence_reason` that keeps "untested because unpatentable" distinct from "tested and refuted". Emits a ranked ledger + clinician hand-off. Invoked by `literature-review` for medical intent and standalone.
 
 3. **Orchestration + output**:
    - `literature-review` — classifies user intent (`purchase | scientific | medical | investment | technical | opinion | factual`), fans out across the right source skills in parallel, runs brand-check for purchases, scores, and hands off to summarize

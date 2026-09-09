@@ -1,0 +1,39 @@
+{
+  "template_id": "dumbbell_beginner_3day",
+  "level": "beginner",
+  "goal": "general_strength",
+  "days_per_week": 3,
+  "session_minutes": 40,
+  "required_equipment": ["dumbbell"],
+  "progression_model": "double-progression",
+  "block_weeks": 8,
+  "sessions": [
+    {
+      "day": 1,
+      "label": "Full Body A",
+      "exercises": [
+        {"exercise_id": "db_goblet_squat", "sets": 3, "reps_low": 8, "reps_high": 12, "rep_step": 1, "load_value": 15.0, "load_increment": 5.0, "tempo": "3-0-1", "rest": "90s", "notes": "Hold one dumbbell vertically at the chest."},
+        {"exercise_id": "db_bench_press_floor", "sets": 3, "reps_low": 8, "reps_high": 12, "rep_step": 1, "load_value": 15.0, "load_increment": 5.0, "tempo": "2-0-2", "rest": "90s", "notes": "Lie on the floor; press dumbbells straight up over the shoulders."},
+        {"exercise_id": "db_farmer_carry", "sets": 3, "reps_low": 2, "reps_high": 4, "reps_suffix": "trips", "rep_step": 1, "load_value": 20.0, "load_increment": 5.0, "tempo": "n/a", "rest": "60s", "notes": "Trips of ~30m each; walk tall, shoulders back."}
+      ]
+    },
+    {
+      "day": 2,
+      "label": "Full Body B",
+      "exercises": [
+        {"exercise_id": "db_romanian_deadlift", "sets": 3, "reps_low": 8, "reps_high": 12, "rep_step": 1, "load_value": 15.0, "load_increment": 5.0, "tempo": "3-1-1", "rest": "90s", "notes": "Hinge at the hips, dumbbells stay close to the legs."},
+        {"exercise_id": "db_bent_over_row", "sets": 3, "reps_low": 8, "reps_high": 12, "rep_step": 1, "load_value": 15.0, "load_increment": 5.0, "tempo": "2-0-2", "rest": "90s", "notes": "Hinge forward ~45 degrees; pull the elbows past the ribs."},
+        {"exercise_id": "db_farmer_carry", "sets": 3, "reps_low": 2, "reps_high": 4, "reps_suffix": "trips", "rep_step": 1, "load_value": 20.0, "load_increment": 5.0, "tempo": "n/a", "rest": "60s", "notes": "Trips of ~30m each; walk tall, shoulders back."}
+      ]
+    },
+    {
+      "day": 3,
+      "label": "Full Body C",
+      "exercises": [
+        {"exercise_id": "db_goblet_squat", "sets": 3, "reps_low": 8, "reps_high": 12, "rep_step": 1, "load_value": 15.0, "load_increment": 5.0, "tempo": "3-0-1", "rest": "90s", "notes": "Hold one dumbbell vertically at the chest."},
+        {"exercise_id": "db_bent_over_row", "sets": 3, "reps_low": 8, "reps_high": 12, "rep_step": 1, "load_value": 15.0, "load_increment": 5.0, "tempo": "2-0-2", "rest": "90s", "notes": "Hinge forward ~45 degrees; pull the elbows past the ribs."},
+        {"exercise_id": "db_romanian_deadlift", "sets": 3, "reps_low": 8, "reps_high": 12, "rep_step": 1, "load_value": 15.0, "load_increment": 5.0, "tempo": "3-1-1", "rest": "90s", "notes": "Hinge at the hips, dumbbells stay close to the legs."}
+      ]
+    }
+  ]
+}
