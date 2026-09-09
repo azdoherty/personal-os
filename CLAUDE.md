@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repository is
 
-`personal-os` is a Claude Code **plugin marketplace** (declared in `.claude-plugin/marketplace.json`) that currently hosts three plugins: `research` at `plugins/research/`, `workout` at `plugins/workout/`, and `insurance` at `plugins/insurance/`. Add new plugins by dropping them under `plugins/` and appending an entry to the marketplace manifest.
+`personal-os` is a Claude Code **plugin marketplace** (declared in `.claude-plugin/marketplace.json`) that currently hosts four plugins: `research` at `plugins/research/`, `workout` at `plugins/workout/`, `insurance` at `plugins/insurance/`, and `rental` at `plugins/rental/`. Add new plugins by dropping them under `plugins/` and appending an entry to the marketplace manifest.
 
 The `research` plugin (v0.6.0, 10 skills) does literature review for purchases, scientific/medical questions, and other "I need to read 50 threads/papers" research tasks. It fans out across Reddit, HN/StackExchange, the open web, and peer-reviewed literature (PubMed, Semantic Scholar, OpenAlex, arXiv), then trust-scores and summarizes.
 
@@ -12,14 +12,17 @@ The `workout` plugin (v0.1.0, 3 skills) builds progressive home-strength program
 
 The `insurance` plugin (v0.1.0, 1 skill) is a stateless renewal helper: its `coverage-review` skill compares home/auto/umbrella/jewelry/life quotes apples-to-apples, judges coverage adequacy against the user's financial exposure and hyperlocal (state/region) factors, flags gaps (life, umbrella, disability), and weighs carrier claims reputation and financial strength — handing off to the `research` plugin for live carrier reputation. Prose + reference files only (no scripts, no stored PII).
 
+The `rental` plugin (v0.2.0, 7 skills) analyzes local 2–4 unit multifamily listings for long-term rental investment: it ingests a Redfin CSV export, screens with a zero-API rent heuristic, pauses for human pruning, enriches the shortlist via RentCast, and reports cash-on-cash returns across price scenarios. It also estimates itemized rehab costs (bathroom/kitchen/roof/electrical, parts+labor, NH Seacoast-specific) via `estimate-rehab`. Shared logic lives in `plugins/rental/lib/` (stdlib-only, unit-tested); skills are thin CLI wrappers. Config (with the RentCast key) lives in the OS config dir, never the repo.
+
 ## Common commands
 
 ```bash
 # Validate manifests after any change
 claude plugin validate .                           # marketplace
 claude plugin validate plugins/research            # plugin
-claude plugin validate plugins/workout            # plugin
-claude plugin validate plugins/insurance            # plugin
+claude plugin validate plugins/workout             # plugin
+claude plugin validate plugins/insurance           # plugin
+claude plugin validate plugins/rental              # plugin
 
 # After bumping plugin version
 claude plugin update research@personal-os          # restart Claude Code to apply
@@ -42,9 +45,15 @@ cd plugins/workout && python -m pytest lib/tests -v
 python plugins/workout/skills/equipment-intake/scripts/intake.py --set dumbbell,pull_up_bar
 python plugins/workout/skills/program-builder/scripts/build.py --level beginner --days 3 --minutes 30 --equipment dumbbell,pull_up_bar --format markdown --out program.md
 python plugins/workout/skills/equipment-advisor/scripts/advise.py --owned dumbbell,pull_up_bar
+
+# Rental plugin — run the test suite
+cd plugins/rental && python -m pytest -v
+
+# Rental pipeline (after /setup): ingest -> screen -> [prune] -> enrich -> report
+python plugins/rental/skills/ingest-listings/scripts/ingest.py redfin.csv > props.json
 ```
 
-The `research` plugin has no automated tests yet -- verification happens by running the scripts directly against live APIs. The `workout` plugin's `lib/` has a full pytest suite (`cd plugins/workout && python -m pytest lib/tests -v`).
+The `research` plugin has no automated tests yet -- verification happens by running the scripts directly against live APIs. The `workout` plugin's `lib/` has a full pytest suite (`cd plugins/workout && python -m pytest lib/tests -v`). The `rental` plugin also has a full pytest suite (`cd plugins/rental && python -m pytest -v`).
 
 ## Architecture
 

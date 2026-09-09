@@ -1,0 +1,87 @@
+{
+  "_comment": "Rehab cost reference data for the Rochester/Dover/Somersworth/Exeter NH Seacoast corridor. Rates are $/unit, split into parts and labor. Each line item's 'source' field documents where its all-in installed-cost figure came from. Hand-tune any rate as real contractor quotes come in.",
+  "_methodology": "All-in figures sourced from 2026 remodeling-cost research (national unless noted NH-specific), adjusted +10% for NH Seacoast where using national data -- derived from comparing NH Seacoast bathroom-remodel totals (~10-15% above national) and NH's explicitly-stated +15% electrical-panel-upgrade premium over national. Parts/labor split is a documented allocation, not independently sourced per item: labor-dominant trades (demo, plumbing, electrical, tile-setting) allocated ~65-80% labor; fixture/material-dominant items (cabinets, countertops, appliances, premium fixtures) allocated 60-70% parts.",
+  "bathroom_remodel": {
+    "tiers": ["economy", "luxury"],
+    "line_items": [
+      {"name": "Demo & prep", "unit": "sqft",
+       "parts": {"economy": 2.0, "luxury": 3.0}, "labor": {"economy": 10.0, "luxury": 15.0},
+       "source": "Nat'l demo labor $500-1,500/project (This Old House 2026), NH +10%, ~80% labor"},
+      {"name": "Plumbing rough-in", "unit": "sqft",
+       "parts": {"economy": 6.0, "luxury": 12.0}, "labor": {"economy": 16.0, "luxury": 26.0},
+       "source": "Nat'l plumbing labor $1,000-4,000/project (This Old House 2026), NH +10%, ~35% parts"},
+      {"name": "Electrical (GFCI, fan wiring)", "unit": "sqft",
+       "parts": {"economy": 3.0, "luxury": 6.0}, "labor": {"economy": 7.0, "luxury": 12.0},
+       "source": "Nat'l electrical labor $500-2,000/project (This Old House 2026), NH +10%, ~35% parts"},
+      {"name": "Tile - floor", "unit": "sqft",
+       "parts": {"economy": 3.0, "luxury": 10.0}, "labor": {"economy": 7.0, "luxury": 12.0},
+       "source": "Nat'l tile labor $1,000-3,000/project + material $2-15/sqft (This Old House 2026), NH +10%"},
+      {"name": "Tile - tub/shower surround", "unit": "sqft",
+       "parts": {"economy": 4.0, "luxury": 12.0}, "labor": {"economy": 9.0, "luxury": 15.0},
+       "source": "Same basis as floor tile, wet-wall labor premium for waterproofing, NH +10%"},
+      {"name": "Toilet", "unit": "each",
+       "parts": {"economy": 150.0, "luxury": 700.0}, "labor": {"economy": 150.0, "luxury": 250.0},
+       "source": "Installed $200-800 budget-mid, $800+ luxury (Angi 2026), NH +10%"},
+      {"name": "Vanity + sink", "unit": "each",
+       "parts": {"economy": 350.0, "luxury": 2500.0}, "labor": {"economy": 200.0, "luxury": 400.0},
+       "source": "Installed $400-5,000, standard avg ~$1,600, custom ~$4,000+ (Angi/DIY Depot 2026), NH +10%"},
+      {"name": "Tub/shower unit", "unit": "each",
+       "parts": {"economy": 700.0, "luxury": 4500.0}, "labor": {"economy": 500.0, "luxury": 1200.0},
+       "source": "Bathtub $1,100-5,900, shower $600 prefab to $10,000+ custom (HomeLight/Angi 2026), NH +10%"},
+      {"name": "Paint/drywall", "unit": "sqft",
+       "parts": {"economy": 0.6, "luxury": 1.0}, "labor": {"economy": 1.2, "luxury": 1.8},
+       "source": "Nat'l finish-carpentry labor $500-1,500/project allocated to paint/drywall scope, NH +10%"}
+    ]
+  },
+  "kitchen_remodel": {
+    "tiers": ["economy", "luxury"],
+    "line_items": [
+      {"name": "Demo & prep", "unit": "sqft",
+       "parts": {"economy": 3.0, "luxury": 5.0}, "labor": {"economy": 5.0, "luxury": 9.0},
+       "source": "Scaled up from bathroom demo (more built-ins to remove), NH +10%"},
+      {"name": "Cabinets", "unit": "linear_ft",
+       "parts": {"economy": 70.0, "luxury": 850.0}, "labor": {"economy": 30.0, "luxury": 150.0},
+       "source": "Stock $100-300/linear ft, custom $500-1,200+/linear ft, luxury $1,500+/linear ft (HomeAdvisor/NextDayCabinets 2026), NH +10%. Priced per linear foot of cabinet run, not room sqft -- run length drives cost."},
+      {"name": "Countertops", "unit": "sqft",
+       "parts": {"economy": 20.0, "luxury": 75.0}, "labor": {"economy": 10.0, "luxury": 20.0},
+       "source": "Laminate $25-40/sqft, quartz/granite $50-175/sqft, nat'l avg $75-95/sqft (SlabWise/Homewyse 2026), NH +10%"},
+      {"name": "Appliance package", "unit": "each",
+       "parts": {"economy": 3500.0, "luxury": 55000.0}, "labor": {"economy": 500.0, "luxury": 2000.0},
+       "source": "Standard package (fridge/microwave/range/dishwasher) $2,100-5,400; luxury $45,000-90,000+ (Yale Appliance/HomeGuide 2026), NH +10%. Flat per-kitchen line, not sqft-scaled -- dominates the luxury-tier total, flag prominently in output."},
+      {"name": "Kitchen plumbing (sink, dishwasher, disposal)", "unit": "each",
+       "parts": {"economy": 300.0, "luxury": 900.0}, "labor": {"economy": 400.0, "luxury": 700.0},
+       "source": "Derived from bathroom plumbing-per-fixture basis, NH +10%"},
+      {"name": "Kitchen electrical (circuits, under-cabinet lighting)", "unit": "each",
+       "parts": {"economy": 250.0, "luxury": 800.0}, "labor": {"economy": 550.0, "luxury": 1200.0},
+       "source": "Derived from bathroom electrical basis, scaled for kitchen's higher circuit-count code requirements, NH +10%"},
+      {"name": "Flooring", "unit": "sqft",
+       "parts": {"economy": 3.0, "luxury": 9.0}, "labor": {"economy": 3.0, "luxury": 6.0},
+       "source": "LVP/laminate $2-5/sqft materials, hardwood/tile $6-12/sqft materials (general market pricing), NH +10%"},
+      {"name": "Backsplash", "unit": "sqft",
+       "parts": {"economy": 6.0, "luxury": 20.0}, "labor": {"economy": 8.0, "luxury": 12.0},
+       "source": "Subway-tile economy to natural-stone/glass luxury, same basis as bathroom tile, NH +10%"}
+    ]
+  },
+  "roof_replacement": {
+    "tiers": null,
+    "line_items": [
+      {"name": "Tear-off, underlayment, shingle, flashing", "unit": "sqft",
+       "parts": 2.5, "labor": 4.5,
+       "source": "$5.50-8.50/sqft installed, NH-specific -- already localized for snow-load/ice-dam installation requirements (RoofVista/Compass Exteriors 2026), no further regional adjustment applied. Single tier: asphalt shingle is standard for rental properties; a metal/slate luxury tier was considered and rejected as not useful for rental-investment decisions."}
+    ]
+  },
+  "electrical": {
+    "tiers": null,
+    "line_items": [
+      {"name": "Panel upgrade (200A)", "unit": "each",
+       "parts": 1200.0, "labor": 2300.0,
+       "source": "$1,725-5,175 in NH, explicitly +15% above national average (CostOnce/TMB Electric Corp 2026), NH-specific, no further adjustment applied"},
+      {"name": "General rewire", "unit": "sqft",
+       "parts": 3.0, "labor": 5.0,
+       "source": "$6-10/sqft nationally (This Old House 2026); NH electrical panel data confirms NH runs above national, and this range's midpoint already sits within that premium -- no further multiplier applied to avoid compounding two separate regional adjustments"},
+      {"name": "Knob-and-tube removal", "unit": "sqft", "trigger": "year_built < 1960",
+       "parts": 4.0, "labor": 8.0,
+       "source": "$10,000-30,000 additional for pre-1960 knob-and-tube homes nationally (CostOnce/TMB Electric Corp 2026), backed out to $/sqft for a typical 1,800-2,500 sqft multi-family building. Additive on top of General rewire, not a replacement for it."}
+    ]
+  }
+}
