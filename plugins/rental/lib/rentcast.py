@@ -80,6 +80,11 @@ def enrich_property(prop: Property, api_key: str, cache: dict,
     if parsed["rent"] is not None:
         prop.gross_monthly_rent = float(parsed["rent"])
         prop.rent_source = "rentcast"
+    else:
+        prop.notes.append(
+            "RentCast returned no rent estimate — gross_monthly_rent is still the "
+            "screening heuristic, not a real enrichment result"
+        )
     prop.comps = parsed["comps"]
     if not parsed["comps"]:
         prop.notes.append("RentCast returned no rental comps — low confidence")

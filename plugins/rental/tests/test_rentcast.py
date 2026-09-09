@@ -45,6 +45,22 @@ def test_enrich_uses_cache_and_sets_rent(monkeypatch):
     assert len(prop.comps) == 2
 
 
+def test_enrich_notes_when_rent_is_null_even_with_comps():
+    # RentCast can return a low-confidence response: no rent estimate, but comps
+    # still present. Silently keeping the stale heuristic rent with no note would
+    # make an unenriched property look successfully enriched.
+    no_rent = {"rent": None, "rentRangeLow": None, "rentRangeHigh": None,
+              "comparables": SAMPLE["comparables"]}
+    def fake_fetch(url, api_key):
+        return no_rent
+    prop = Property(address="123 Main St", sqft=2400, gross_monthly_rent=1800.0,
+                    rent_source="heuristic:per_sqft")
+    rentcast.enrich_property(prop, "key", {}, fetcher=fake_fetch)
+    assert prop.gross_monthly_rent == 1800.0  # untouched, still the heuristic value
+    assert prop.rent_source == "heuristic:per_sqft"
+    assert any("no rent estimate" in note for note in prop.notes)
+
+
 def test_enrich_propagates_quota_error():
     def quota(url, api_key):
         raise rentcast.QuotaError("429")
