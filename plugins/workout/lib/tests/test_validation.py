@@ -41,3 +41,19 @@ def test_equipment_validates_against_the_real_shipped_catalog():
     assert validation.validate_equipment(["sturdy_table", "sled"]) == ["sturdy_table", "sled"]
     with pytest.raises(validation.TokenError):
         validation.validate_equipment(["dumbbells"])  # plural typo
+
+
+def test_valid_focus_tokens_pass_through():
+    assert validation.validate_focus(["core", "legs", "arms"]) == ["core", "legs", "arms"]
+
+
+def test_duplicate_focus_tokens_are_deduped_preserving_first_occurrence_order():
+    assert validation.validate_focus(["core", "core"]) == ["core"]
+    assert validation.validate_focus(["legs", "core", "legs"]) == ["legs", "core"]
+
+
+def test_near_miss_focus_is_rejected_not_silently_ignored():
+    with pytest.raises(validation.TokenError) as exc:
+        validation.validate_focus(["cardio"])
+    assert "cardio" in str(exc.value)
+    assert "core" in str(exc.value)

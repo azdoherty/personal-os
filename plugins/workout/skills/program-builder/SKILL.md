@@ -64,12 +64,44 @@ renders a printable output.
    printed -- fix the token and re-run rather than dropping it, or the
    program will silently ignore a real constraint.
 
-3. **Deliver the output.** For `markdown`, offer to also produce it as an
+3. **Split-routine mode.** If the user asks for a single-focus session (a
+   "core day," "leg day," "arm day") rather than a full-body program, or
+   explicitly wants a split routine across several days ("a core day, a leg
+   day, and an arm day, each on different days"), pass `--focus` instead of
+   letting the tool pick a template:
+   ```bash
+   python3 ${CLAUDE_PLUGIN_ROOT}/skills/program-builder/scripts/build.py \
+       --level beginner --days 6 --minutes 25 \
+       --focus core,legs,arms \
+       --block-weeks 4 --format markdown --out program.md
+   ```
+   `--focus` takes a comma-separated list from `core`, `legs`, `arms`, and
+   cycles across `--days` (3 focuses over 6 days repeats the list twice; a
+   single focus with `--days 3` repeats that one focus every day). When
+   `--focus` is set, curated templates are skipped entirely -- every session
+   is assembled from the eligible exercise pool, sized to fit `--minutes`,
+   picking a different exercise per distinct sub-category within the focus
+   (e.g. a core day pulls from anti-extension, anti-rotation, flexion, and
+   hip-flexor-endurance work, not one exercise repeated for the whole block).
+
+   **Tell the user up front if their arm day will be thin.** A
+   zero-equipment `arms` focus gets exactly two exercises: one dedicated
+   triceps pick (Diamond Push-Up) plus one general push movement as filler
+   (Incline Push-Up). There is no bodyweight biceps option at all without a
+   table, so that bucket is simply absent -- and because only two buckets
+   exist, `--minutes` stops changing anything past ~14 minutes for a
+   zero-equipment arm day; there is nothing more to add. True bodyweight
+   bicep isolation barely exists in general: the biceps pick (table inverted
+   row) needs a sturdy table, and a triceps dip variation needs a chair. If
+   the user hasn't run `equipment-intake`, ask about a chair/table
+   specifically before promising a well-rounded arm day.
+
+4. **Deliver the output.** For `markdown`, offer to also produce it as an
    HTML artifact (styled, printable) via the `Artifact` tool -- follow the
    `artifact-design` skill's guidance when doing so. For `csv`, the file is
    meant to be printed and filled in by hand.
 
-4. **Remix:** if the user doesn't like the result, re-run step 2 with a
+5. **Remix:** if the user doesn't like the result, re-run step 2 with a
    different equipment/constraint combination, or pass `--format json` and
    hand-edit specific exercises, then re-render with `render.py`'s functions
    (`lib/render.py`) for a quick one-off adjustment.

@@ -11,6 +11,7 @@ CONSTRAINT_FLAGS = ("grip", "arm-load", "overhead", "spinal-load", "impact")
 PROGRESSION_MODELS = ("double-progression", "linear", "variation-ladder")
 LOAD_TYPES = ("bodyweight", "external", "band")
 LEVELS = ("beginner", "intermediate")
+FOCUS_AREAS = ("arms", "core", "legs")
 
 
 @dataclass

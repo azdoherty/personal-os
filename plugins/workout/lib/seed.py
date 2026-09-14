@@ -18,12 +18,12 @@ def seed_exercises(conn: sqlite3.Connection, path=None) -> int:
     conn.execute("DELETE FROM exercises")
     conn.executemany(
         """INSERT INTO exercises
-           (exercise_id, name, movement_pattern, equipment_required, constraint_flags,
-            ladder_group, ladder_rank, default_reps, notes)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+           (exercise_id, name, movement_pattern, sub_category, equipment_required,
+            constraint_flags, ladder_group, ladder_rank, default_reps, notes)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
         [
             (
-                e["exercise_id"], e["name"], e["movement_pattern"],
+                e["exercise_id"], e["name"], e["movement_pattern"], e.get("sub_category"),
                 json.dumps(e.get("equipment_required", [])), json.dumps(e.get("constraint_flags", [])),
                 e.get("ladder_group"), e.get("ladder_rank"), e["default_reps"], e.get("notes", ""),
             )

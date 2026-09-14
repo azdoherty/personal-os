@@ -57,6 +57,20 @@ def test_variation_ladder_caps_at_top_rung():
     assert prog_mod.apply_variation_ladder(cfg, 100, ladder)["exercise_id"] == "pushup"
 
 
+def test_variation_ladder_notes_come_from_the_active_rung_not_a_static_slot_note():
+    ladder = [
+        {"exercise_id": "incline_pushup", "name": "Incline Push-Up", "default_reps": "8-12",
+         "notes": "Hands elevated."},
+        {"exercise_id": "pushup", "name": "Push-Up", "default_reps": "10-15",
+         "notes": "Hands on the floor."},
+    ]
+    cfg = {"sets": 3, "weeks_per_rung": 2}
+    week1 = prog_mod.apply_variation_ladder(cfg, 1, ladder)
+    week3 = prog_mod.apply_variation_ladder(cfg, 3, ladder)
+    assert week1["notes"] == "Hands elevated."
+    assert week3["notes"] == "Hands on the floor."
+
+
 def test_generate_block_dispatches_by_model():
     cfg = {"sets": 3, "reps_low": 8, "reps_high": 9, "rep_step": 1, "load_value": 10.0, "load_increment": 5.0}
     weeks = prog_mod.generate_block(cfg, block_weeks=4, model="double-progression")
