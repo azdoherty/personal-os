@@ -1,0 +1,21 @@
+{
+  "_comment": "Dealer reputation signal weights (must sum to 1.0) and verdict thresholds. Missing signals score a neutral 50, so an unresearched dealer lands at 'inconclusive'.",
+  "weights": {
+    "google_reviews": 0.30,
+    "bbb": 0.25,
+    "years_in_business": 0.15,
+    "integrity": 0.20,
+    "corroboration_freshness": 0.10
+  },
+  "thresholds": {
+    "reputable": 70,
+    "inconclusive": 40
+  },
+  "bbb_grades": {
+    "A+": 100, "A": 95, "A-": 90,
+    "B+": 80, "B": 75, "B-": 70,
+    "C+": 60, "C": 55, "C-": 50,
+    "D+": 40, "D": 35, "D-": 30,
+    "F": 0, "NR": 50
+  }
+}

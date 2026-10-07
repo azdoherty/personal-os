@@ -1,0 +1,14 @@
+{
+  "_comment": "Defaults merged under the user's config. Only zip is required.",
+  "zip": null,
+  "gallons": 150,
+  "min_score": 70,
+  "max_age_days": 7,
+  "sources": {
+    "newenglandoil_zones": [],
+    "urls": []
+  },
+  "allowlist": [],
+  "blocklist": [],
+  "cache_ttl_days": 30
+}

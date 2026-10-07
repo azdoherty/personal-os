@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repository is
 
-`personal-os` is a Claude Code **plugin marketplace** (declared in `.claude-plugin/marketplace.json`) that currently hosts four plugins: `research` at `plugins/research/`, `workout` at `plugins/workout/`, `insurance` at `plugins/insurance/`, and `rental` at `plugins/rental/`. Add new plugins by dropping them under `plugins/` and appending an entry to the marketplace manifest.
+`personal-os` is a Claude Code **plugin marketplace** (declared in `.claude-plugin/marketplace.json`) that currently hosts five plugins: `research` at `plugins/research/`, `workout` at `plugins/workout/`, `insurance` at `plugins/insurance/`, `rental` at `plugins/rental/`, and `heating-oil` at `plugins/heating-oil/`. Add new plugins by dropping them under `plugins/` and appending an entry to the marketplace manifest.
 
 The `research` plugin (v0.6.0, 10 skills) does literature review for purchases, scientific/medical questions, and other "I need to read 50 threads/papers" research tasks. It fans out across Reddit, HN/StackExchange, the open web, and peer-reviewed literature (PubMed, Semantic Scholar, OpenAlex, arXiv), then trust-scores and summarizes.
 
@@ -13,6 +13,8 @@ The `workout` plugin (v0.1.0, 3 skills) builds progressive home-strength program
 The `insurance` plugin (v0.1.0, 1 skill) is a stateless renewal helper: its `coverage-review` skill compares home/auto/umbrella/jewelry/life quotes apples-to-apples, judges coverage adequacy against the user's financial exposure and hyperlocal (state/region) factors, flags gaps (life, umbrella, disability), and weighs carrier claims reputation and financial strength — handing off to the `research` plugin for live carrier reputation. Prose + reference files only (no scripts, no stored PII).
 
 The `rental` plugin (v0.2.0, 7 skills) analyzes local 2–4 unit multifamily listings for long-term rental investment: it ingests a Redfin CSV export, screens with a zero-API rent heuristic, pauses for human pruning, enriches the shortlist via RentCast, and reports cash-on-cash returns across price scenarios. It also estimates itemized rehab costs (bathroom/kitchen/roof/electrical, parts+labor, NH Seacoast-specific) via `estimate-rehab`. Shared logic lives in `plugins/rental/lib/` (stdlib-only, unit-tested); skills are thin CLI wrappers. Config (with the RentCast key) lives in the OS config dir, never the repo.
+
+The `heating-oil` plugin (v0.1.0, 2 skills) finds the cheapest home heating oil delivered to a ZIP from reputable dealers: `fetch.py` scrapes COD dealer price tables (newenglandoil.com zones or any dealer-listing URL, header-driven parser) and merges manual/WebSearch quotes; Claude researches dealer reputation via WebSearch and passes signals to `score.py` (Google reviews, BBB, years, complaints, corroboration/freshness → 0–100, cached 30 days in the config dir); `rank.py` picks the right volume tier and ranks by delivered cost. Shared logic in `plugins/heating-oil/lib/` (stdlib-only, unit-tested); config in the OS config dir.
 
 ## Common commands
 
@@ -23,6 +25,7 @@ claude plugin validate plugins/research            # plugin
 claude plugin validate plugins/workout             # plugin
 claude plugin validate plugins/insurance           # plugin
 claude plugin validate plugins/rental              # plugin
+claude plugin validate plugins/heating-oil         # plugin
 
 # After bumping plugin version
 claude plugin update research@personal-os          # restart Claude Code to apply
@@ -51,9 +54,14 @@ cd plugins/rental && python -m pytest -v
 
 # Rental pipeline (after /setup): ingest -> screen -> [prune] -> enrich -> report
 python plugins/rental/skills/ingest-listings/scripts/ingest.py redfin.csv > props.json
+
+# Heating-oil plugin — tests, and fetch -> score -> rank
+cd plugins/heating-oil && python -m pytest -v
+S=plugins/heating-oil/skills/find-oil-price/scripts
+python $S/fetch.py --zone NH:10 | python $S/score.py --reputation rep.json | python $S/rank.py --gallons 150
 ```
 
-The `research` plugin has no automated tests yet -- verification happens by running the scripts directly against live APIs. The `workout` plugin's `lib/` has a full pytest suite (`cd plugins/workout && python -m pytest lib/tests -v`). The `rental` plugin also has a full pytest suite (`cd plugins/rental && python -m pytest -v`).
+The `research` plugin has no automated tests yet -- verification happens by running the scripts directly against live APIs. The `workout` plugin's `lib/` has a full pytest suite (`cd plugins/workout && python -m pytest lib/tests -v`). The `rental` plugin also has a full pytest suite (`cd plugins/rental && python -m pytest -v`), as does `heating-oil` (`cd plugins/heating-oil && python -m pytest -v`).
 
 ## Architecture
 

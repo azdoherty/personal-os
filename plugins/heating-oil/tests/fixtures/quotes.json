@@ -1,0 +1,6 @@
+[
+  {"dealer": "Seacoast Fuel Co", "town": "Portsmouth", "phone": "(603) 555-0101", "price": 3.399, "updated": "2026-10-06", "source": "newenglandoil:NH-zone10"},
+  {"dealer": "Blue Flame Energy", "town": "Stratham", "phone": "603.555.0199", "tiers": {"100": 3.50, "150": 3.31}, "updated": "2026-10-05", "source": "example.com"},
+  {"dealer": "Cheap Unknown Oil", "town": "Dover", "price": 2.89, "updated": "2026-10-06", "source": "manual"},
+  {"dealer": "Big Minimum Fuel", "town": "Rye", "price": 3.10, "min_delivery_gallons": 200, "updated": "2026-10-06", "source": "manual"}
+]

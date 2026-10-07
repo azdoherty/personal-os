@@ -1,0 +1,6 @@
+{
+  "name": "heating-oil",
+  "version": "0.1.0",
+  "description": "Find the cheapest home heating oil delivered to your ZIP from reputable dealers: scrapes COD dealer price listings (newenglandoil.com zones or any dealer-table URL), accepts manually gathered quotes, scores dealer reputation (Google reviews, BBB, years in business, complaints), and ranks by total delivered cost.",
+  "author": { "name": "azdoh", "email": "your-email@example.com" }
+}

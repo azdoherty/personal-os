@@ -20,7 +20,7 @@
     },
     {
       "name": "insurance",
-      "description": "Compare insurance quotes apples-to-apples and choose the right coverage across home, auto, umbrella, jewelry, and life — adjusted for state/region specifics. Flags missing lines (life, umbrella, disability), weighs carrier claims reputation + financial strength, and hands off to the research plugin for live carrier reputation. Stateless prose skill, no stored PII.",
+      "description": "Compare insurance quotes apples-to-apples and choose the right coverage across home, auto, umbrella, jewelry, and life \u2014 adjusted for state/region specifics. Flags missing lines (life, umbrella, disability), weighs carrier claims reputation + financial strength, and hands off to the research plugin for live carrier reputation. Stateless prose skill, no stored PII.",
       "source": "./plugins/insurance",
       "category": "productivity"
     },
@@ -28,6 +28,12 @@
       "name": "rental",
       "description": "Analyze local 2-4 unit multifamily listings for long-term rental investment: Redfin CSV ingest, zero-API heuristic screen, RentCast enrichment, and cash-on-cash reporting across price scenarios. Also estimates itemized rehab costs (bathroom/kitchen/roof/electrical) for the NH Seacoast market.",
       "source": "./plugins/rental",
+      "category": "productivity"
+    },
+    {
+      "name": "heating-oil",
+      "description": "Find the cheapest home heating oil delivered to your ZIP from reputable dealers: scrapes COD dealer price listings (newenglandoil.com zones or any dealer-table URL) or takes manually gathered quotes, scores dealer reputation (Google reviews, BBB, years in business, complaints), and ranks by total delivered cost for your order size.",
+      "source": "./plugins/heating-oil",
       "category": "productivity"
     }
   ]
