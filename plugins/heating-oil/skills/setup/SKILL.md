@@ -29,8 +29,8 @@ Writes `~/.config/personal-os/heating-oil/config.json`
 3. Pick sources:
    - **New England ZIP** (MA, RI, NH, ME, VT, CT): newenglandoil.com lists COD dealer prices by
      state zone. Look at the state's page (e.g. `https://www.newenglandoil.com/newhampshire/`)
-     with WebFetch to find which zone(s) list towns near the ZIP. Include adjacent zones if the
-     user is near a boundary. Record them as `{"state": "NH", "zone": 10}`.
+     with WebFetch to find which zone(s) list towns near the ZIP (e.g. the NH Seacoast — Portsmouth/Exeter/Hampton — is NH zone 2, "Eastern New Hampshire"). Include adjacent zones if the
+     user is near a boundary. Record them as `{"state": "NH", "zone": 2}`.
    - **Any ZIP**: add `sources.urls` for any page that shows a dealer price table (the parser
      reads the table headers, so most COD dealer listing sites work). Check with
      `fetch.py --url <url>` that dealers come back.
@@ -39,7 +39,7 @@ Writes `~/.config/personal-os/heating-oil/config.json`
 4. Write it:
    ```bash
    echo '{"zip":"03801","gallons":150,"min_score":70,
-          "sources":{"newenglandoil_zones":[{"state":"NH","zone":10}],"urls":[]},
+          "sources":{"newenglandoil_zones":[{"state":"NH","zone":2}],"urls":[]},
           "allowlist":[],"blocklist":[]}' \
      | python3 ${CLAUDE_PLUGIN_ROOT}/skills/setup/scripts/setup.py --write
    ```

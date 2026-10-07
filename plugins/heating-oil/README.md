@@ -25,7 +25,7 @@ Config and the dealer cache live in `~/.config/personal-os/heating-oil/` (never 
 ```bash
 # one-off, no config
 S=plugins/heating-oil/skills/find-oil-price/scripts
-python3 $S/fetch.py --zip 03801 --zone NH:10 | python3 $S/score.py | python3 $S/rank.py --gallons 150
+python3 $S/fetch.py --zip 03801 --zone NH:2 | python3 $S/score.py | python3 $S/rank.py --gallons 150
 ```
 Unresearched dealers come out `inconclusive`. Run it through the `find-oil-price` skill
 so Claude does the reputation research.

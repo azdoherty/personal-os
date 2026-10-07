@@ -58,7 +58,7 @@ python plugins/rental/skills/ingest-listings/scripts/ingest.py redfin.csv > prop
 # Heating-oil plugin — tests, and fetch -> score -> rank
 cd plugins/heating-oil && python -m pytest -v
 S=plugins/heating-oil/skills/find-oil-price/scripts
-python $S/fetch.py --zone NH:10 | python $S/score.py --reputation rep.json | python $S/rank.py --gallons 150
+python $S/fetch.py --zone NH:2 | python $S/score.py --reputation rep.json | python $S/rank.py --gallons 150
 ```
 
 The `research` plugin has no automated tests yet -- verification happens by running the scripts directly against live APIs. The `workout` plugin's `lib/` has a full pytest suite (`cd plugins/workout && python -m pytest lib/tests -v`). The `rental` plugin also has a full pytest suite (`cd plugins/rental && python -m pytest -v`), as does `heating-oil` (`cd plugins/heating-oil && python -m pytest -v`).

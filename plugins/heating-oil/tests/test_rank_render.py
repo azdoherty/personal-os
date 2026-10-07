@@ -52,3 +52,11 @@ def test_render_markdown_has_best_line_table_and_excluded():
 def test_render_when_nothing_passes():
     r = rank([_e("Shady", {"100": 2.9}, 20)], 150, 70, 7, today=TODAY)
     assert "No dealer passed" in render_markdown(r, 150)
+
+
+def test_render_warns_when_best_is_not_reputable():
+    r = rank([_e("Meh", {"100": 3.0}, 55)], 150, 40, 7, today=TODAY)
+    md = render_markdown(r, 150)
+    assert "**Best: Meh**" in md and "Reputation is **avoid**" in md
+    good = render_markdown(rank([_e("Good", {"100": 3.0}, 90)], 150, 70, 7, today=TODAY), 150)
+    assert "⚠️" not in good

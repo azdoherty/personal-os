@@ -29,6 +29,10 @@ def render_markdown(result: dict, gallons: float, zip_code: str = "",
                      f"${best['price_per_gal']:.3f}/gal, {_money(best['total'])} total, "
                      f"reputation {best['reputation']['score']:g}"
                      + (f" — call {best['phone']}" if best.get("phone") else ""))
+        if best["reputation"].get("verdict") != "reputable" and not best.get("allowlisted"):
+            lines.append(f"⚠️ Reputation is **{best['reputation'].get('verdict')}**: "
+                         "research this dealer (or call and ask how long they've been "
+                         "delivering, and for references) before ordering.")
         if benchmark:
             diff = benchmark - best["price_per_gal"]
             lines.append(f"That's ${abs(diff):.3f}/gal {'below' if diff >= 0 else 'above'} the benchmark.")

@@ -2,7 +2,7 @@
 """Fetch heating oil dealer prices and print merged, normalized quotes JSON.
 
 Sources (any combination; each fails independently with a warning on stderr):
-  --zone NH:10            newenglandoil.com state zone (repeatable)
+  --zone NH:2            newenglandoil.com state zone (repeatable)
   --url URL               any page with a dealer price table (repeatable)
   --manual FILE|-         quotes JSON you or Claude gathered (WebSearch, phone calls)
 With no source flags, uses sources.newenglandoil_zones / sources.urls from config.
@@ -33,7 +33,7 @@ from lib.sources.newenglandoil import fetch_zone, state_for_zip, state_index_url
 def _zone(s: str) -> dict:
     st, _, z = s.partition(":")
     if not z.isdigit():
-        raise argparse.ArgumentTypeError("zone must look like NH:10")
+        raise argparse.ArgumentTypeError("zone must look like NH:2")
     return {"state": st.upper(), "zone": int(z)}
 
 

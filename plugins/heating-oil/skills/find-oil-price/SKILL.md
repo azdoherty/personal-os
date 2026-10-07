@@ -28,7 +28,7 @@ different ZIP. For a one-off, pass `--zip` and the source flags directly instead
 
 ```bash
 python3 $S/fetch.py > /tmp/oil-quotes.json            # uses configured sources
-python3 $S/fetch.py --zone NH:10 --zone NH:11 > ...   # or explicit sources
+python3 $S/fetch.py --zone NH:2 > ...   # or explicit sources
 ```
 
 Each source fails on its own with a warning on stderr. If the result is empty or very
